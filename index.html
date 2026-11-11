@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MySnapLinks | ماي سناب لينكس</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -20,173 +19,209 @@
       }
     }
   </script>
+  <script>
+    try { if (localStorage.getItem('mysnap_theme') === 'dark') document.documentElement.classList.add('dark'); } catch (e) {}
+  </script>
   <style>
     body { font-family: 'Tajawal', sans-serif; }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
     .dark ::-webkit-scrollbar-thumb { background: #475569; }
+    .inp { width: 100%; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 0.6rem 0.875rem; font-size: 0.875rem; color: #1e293b; transition: all .15s; }
+    .inp::placeholder { color: #9ca3af; }
+    .inp:focus { outline: none; border-color: #22c55e; box-shadow: 0 0 0 3px rgba(34,197,94,.2); }
+    .dark .inp { background: rgba(51,65,85,.6); border-color: #475569; color: #f1f5f9; }
+    .lbl { display: block; font-size: 0.75rem; font-weight: 600; color: #374151; margin-bottom: 0.25rem; }
+    .dark .lbl { color: #d1d5db; }
+    .err { font-size: 0.75rem; color: #e11d48; background: #fff1f2; border-radius: 0.5rem; padding: 0.5rem 0.75rem; }
+    .dark .err { color: #fb7185; background: rgba(76,5,25,.4); }
+    .ok { font-size: 0.75rem; color: #15803d; background: #f0fdf4; border-radius: 0.5rem; padding: 0.5rem 0.75rem; }
+    .dark .ok { color: #4ade80; background: rgba(5,46,22,.5); }
+    .btn-primary { width: 100%; padding: 0.65rem; background: #22c55e; color: #fff; font-weight: 700; border-radius: 0.75rem; font-size: 0.875rem; box-shadow: 0 4px 6px -1px rgba(22,163,74,.2); transition: background .15s; }
+    .btn-primary:hover { background: #16a34a; }
+    .btn-primary:disabled { opacity: .6; cursor: wait; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 1rem; padding: 1.25rem; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .dark .card { background: #1e293b; border-color: #334155; }
   </style>
 </head>
 <body class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
 
-  <!-- ============================================== -->
-  <!-- 1. شاشة تسجيل الدخول بأي إيميل (UNIVERSAL AUTH) -->
-  <!-- ============================================== -->
-  <div id="authModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-gray-200 dark:border-slate-700 text-center">
-      
-      <!-- شعار التطبيق -->
-      <div class="w-14 h-14 mx-auto rounded-2xl bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center font-bold text-2xl shadow-inner mb-3">
-        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
-        </svg>
-      </div>
+  <!-- شاشة التحميل الأولى -->
+  <div id="loadingScreen" class="fixed inset-0 z-[60] bg-slate-900 flex flex-col items-center justify-center gap-3">
+    <div class="w-10 h-10 border-4 border-green-500/30 border-t-green-500 rounded-full animate-spin"></div>
+    <div class="text-sm text-gray-300">جاري التحميل...</div>
+  </div>
 
-      <!-- اسم التطبيق مضبوط بترتيب صحيح LTR -->
-      <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-1" dir="ltr">
-        <span class="text-green-600 dark:text-green-400 font-black">MySnap</span><span class="font-bold">Links</span>
-      </h2>
-      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-5 leading-relaxed">
-        سجل دخولك بأي بريد إلكتروني (Gmail، Outlook، Yahoo، أو بريد عملك) للوصول إلى لوحة روابطك الخاصة.
-      </p>
+  <!-- ============================================== -->
+  <!-- 1. شاشات الترحيب والدخول والتسجيل واستعادة كلمة المرور -->
+  <!-- ============================================== -->
+  <div id="authModal" class="hidden fixed inset-0 bg-gradient-to-br from-slate-900 via-slate-900 to-green-950 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="relative bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-gray-200 dark:border-slate-700 text-center my-auto">
 
-      <!-- نموذج الدخول بأي إيميل -->
-      <form id="universalLoginForm" class="space-y-3.5 text-right">
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-            البريد الإلكتروني:
-          </label>
-          <input 
-            type="email" 
-            id="userEmailInput" 
-            placeholder="name@example.com (أي إيميل تختاره)" 
-            required 
-            class="w-full bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 dark:text-slate-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-            dir="ltr"
-          >
+      <!-- الترحيب -->
+      <div id="welcomeScreen">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center shadow-inner mb-3">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+        </div>
+        <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight" dir="ltr">
+          <span class="text-green-600 dark:text-green-400 font-black">MySnap</span><span class="font-bold">Links</span>
+        </h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2 leading-relaxed">كل روابطك ومواقعك اليومية في مكان واحد، مرتبة في مجموعات وتفتحها بنقرة.</p>
+
+        <ul class="mt-6 space-y-2.5 text-right">
+          <li class="flex items-center gap-3 bg-gray-50 dark:bg-slate-700/50 rounded-xl px-3.5 py-2.5">
+            <span class="text-xl">🗂️</span>
+            <div><div class="text-sm font-bold">مجموعات مرتبة</div><div class="text-[11px] text-gray-500 dark:text-gray-400">نظّم روابطك حسب العمل، الذكاء الاصطناعي، الأدوات...</div></div>
+          </li>
+          <li class="flex items-center gap-3 bg-gray-50 dark:bg-slate-700/50 rounded-xl px-3.5 py-2.5">
+            <span class="text-xl">☁️</span>
+            <div><div class="text-sm font-bold">تزامن على كل أجهزتك</div><div class="text-[11px] text-gray-500 dark:text-gray-400">روابطك محفوظة في حسابك، تجدها على الجوال والحاسوب</div></div>
+          </li>
+          <li class="flex items-center gap-3 bg-gray-50 dark:bg-slate-700/50 rounded-xl px-3.5 py-2.5">
+            <span class="text-xl">⚡</span>
+            <div><div class="text-sm font-bold">بحث فوري</div><div class="text-[11px] text-gray-500 dark:text-gray-400">ابحث في كل روابطك بضغطة Ctrl + K</div></div>
+          </li>
+        </ul>
+
+        <div id="setupNotice" class="hidden mt-5 err text-right leading-relaxed">
+          لم يُربط التطبيق بـ Firebase بعد. املأ قسم <b dir="ltr">FIREBASE_CONFIG</b> في أعلى الكود.
         </div>
 
-        <div>
-          <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">
-            رمز المرور السري (PIN / كلمة السر):
-          </label>
-          <input 
-            type="password" 
-            id="userPinInput" 
-            placeholder="أدخل رمزك السري الخاص بك" 
-            required 
-            class="w-full bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 dark:text-slate-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-            dir="ltr"
-          >
-          <p class="text-[10px] text-gray-400 mt-1">إذا كانت هذه أول زيارة لك، سيتم حفظ هذا الرمز ككلمة سر لحسابك.</p>
+        <div class="mt-6 space-y-2.5">
+          <button type="button" id="goLoginBtn" class="btn-primary !py-3">لدي حساب — تسجيل الدخول</button>
+          <button type="button" id="goRegisterBtn" class="w-full py-3 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 border border-gray-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-bold rounded-xl text-sm transition">أنا جديد — إنشاء حساب</button>
         </div>
-
-        <button 
-          type="submit" 
-          class="w-full py-2.5 bg-brand-green hover:bg-brand-greenDark text-white font-bold rounded-xl text-xs sm:text-sm shadow-md shadow-green-600/20 transition flex items-center justify-center gap-1.5 cursor-pointer"
-        >
-          <span>دخول إلى حسابي</span>
-          <span>🔓</span>
-        </button>
-      </form>
-
-      <!-- فاصل أنيق -->
-      <div class="relative my-4">
-        <div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-200 dark:border-slate-700"></div></div>
-        <div class="relative flex justify-center text-[11px]"><span class="px-2 bg-white dark:bg-slate-800 text-gray-400">أو</span></div>
       </div>
 
-      <!-- زر جوجل الرسمي الظاهر دائماً بالشعار الأصلي -->
-      <button 
-        type="button" 
-        id="googleDirectBtn" 
-        class="w-full py-2.5 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 border border-gray-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
-      >
-        <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-        </svg>
-        <span>تسجيل الدخول السريع بحساب Google</span>
-      </button>
+      <!-- تسجيل الدخول -->
+      <div id="loginScreen" class="hidden">
+        <button type="button" class="auth-back absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xs font-semibold flex items-center gap-1 transition"><span>→</span><span>رجوع</span></button>
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-green-500/10 flex items-center justify-center text-xl mb-3 mt-4">🔓</div>
+        <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">أهلاً بعودتك</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-5">سجّل الدخول للوصول إلى روابطك</p>
+        <form id="loginForm" class="space-y-3.5 text-right" novalidate>
+          <div>
+            <label class="lbl" for="loginEmail">البريد الإلكتروني:</label>
+            <input type="email" id="loginEmail" placeholder="name@example.com" autocomplete="email" class="inp" dir="ltr">
+          </div>
+          <div>
+            <div class="flex items-center justify-between">
+              <label class="lbl" for="loginPass">كلمة المرور:</label>
+              <button type="button" id="goForgotBtn" class="text-[11px] text-green-600 dark:text-green-400 font-semibold hover:underline mb-1">نسيت كلمة المرور؟</button>
+            </div>
+            <input type="password" id="loginPass" placeholder="••••••" autocomplete="current-password" class="inp" dir="ltr">
+          </div>
+          <div id="loginError" class="hidden err"></div>
+          <button type="submit" class="btn-primary">دخول</button>
+        </form>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-5">ليس لديك حساب؟ <button type="button" class="switch-to-register text-green-600 dark:text-green-400 font-bold hover:underline">أنشئ حساباً جديداً</button></p>
+      </div>
+
+      <!-- إنشاء حساب -->
+      <div id="registerScreen" class="hidden">
+        <button type="button" class="auth-back absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xs font-semibold flex items-center gap-1 transition"><span>→</span><span>رجوع</span></button>
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-green-500/10 flex items-center justify-center text-xl mb-3 mt-4">✨</div>
+        <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">إنشاء حساب جديد</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-5">ثوانٍ قليلة وتبدأ بتنظيم روابطك</p>
+        <form id="registerForm" class="space-y-3.5 text-right" novalidate>
+          <div>
+            <label class="lbl" for="regName">الاسم:</label>
+            <input type="text" id="regName" placeholder="اسمك" autocomplete="name" class="inp" maxlength="60">
+          </div>
+          <div>
+            <label class="lbl" for="regEmail">البريد الإلكتروني:</label>
+            <input type="email" id="regEmail" placeholder="name@example.com" autocomplete="email" class="inp" dir="ltr">
+          </div>
+          <div>
+            <label class="lbl" for="regPass">كلمة المرور: <span class="text-[11px] text-gray-400 font-normal">(6 أحرف على الأقل)</span></label>
+            <input type="password" id="regPass" placeholder="••••••" autocomplete="new-password" class="inp" dir="ltr">
+          </div>
+          <div>
+            <label class="lbl" for="regPass2">تأكيد كلمة المرور:</label>
+            <input type="password" id="regPass2" placeholder="••••••" autocomplete="new-password" class="inp" dir="ltr">
+          </div>
+          <div id="registerError" class="hidden err"></div>
+          <button type="submit" class="btn-primary">إنشاء الحساب</button>
+        </form>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-5">لديك حساب بالفعل؟ <button type="button" class="switch-to-login text-green-600 dark:text-green-400 font-bold hover:underline">سجّل الدخول</button></p>
+      </div>
+
+      <!-- نسيت كلمة المرور -->
+      <div id="forgotScreen" class="hidden">
+        <button type="button" class="switch-to-login absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xs font-semibold flex items-center gap-1 transition"><span>→</span><span>رجوع</span></button>
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-green-500/10 flex items-center justify-center text-xl mb-3 mt-4">🔑</div>
+        <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">استعادة كلمة المرور</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-5 leading-relaxed">اكتب بريدك المسجّل، وسنرسل إليه رابطاً لتعيين كلمة مرور جديدة.</p>
+        <form id="forgotForm" class="space-y-3.5 text-right" novalidate>
+          <div>
+            <label class="lbl" for="forgotEmail">البريد الإلكتروني:</label>
+            <input type="email" id="forgotEmail" placeholder="name@example.com" autocomplete="email" class="inp" dir="ltr">
+          </div>
+          <div id="forgotError" class="hidden err"></div>
+          <div id="forgotSuccess" class="hidden ok leading-relaxed"></div>
+          <button type="submit" class="btn-primary">إرسال رابط الاستعادة</button>
+        </form>
+      </div>
 
     </div>
   </div>
 
   <!-- ============================================== -->
-  <!-- 2. واجهة التطبيق الرئيسية (بعد تسجيل الدخول) -->
+  <!-- 2. الشريط العلوي -->
   <!-- ============================================== -->
   <header class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-40 shadow-sm">
     <div class="max-w-6xl mx-auto px-4 sm:px-6">
       <div class="flex items-center justify-between h-16 gap-3">
-        
-        <!-- شعار MySnapLinks ومعلومات المستخدم -->
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center font-bold text-lg shadow-inner">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
-            </svg>
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center shadow-inner flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
           </div>
-          <div>
-            <h1 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-1" dir="ltr">
+          <div class="min-w-0">
+            <h1 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight" dir="ltr" style="text-align:right">
               <span class="text-green-600 dark:text-green-400 font-black">MySnap</span><span class="font-bold">Links</span>
             </h1>
-            <div id="userProfileBadge" class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-green-500 inline-block animate-pulse"></span>
-              <span id="activeEmailLabel" class="font-medium truncate max-w-[140px] sm:max-w-[200px]" dir="ltr">user@email.com</span>
+            <div class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+              <span id="syncDot" class="w-2 h-2 rounded-full bg-green-500 inline-block" title="متزامن"></span>
+              <span id="activeEmailLabel" class="font-medium truncate max-w-[120px] sm:max-w-[240px]"></span>
             </div>
           </div>
         </div>
 
-        <!-- شريط البحث السريع -->
-        <div class="flex-1 max-w-md mx-2 relative">
+        <div class="flex-1 max-w-md mx-2 relative hidden md:block">
           <div class="relative flex items-center">
-            <input 
-              type="text" 
-              id="globalSearchInput" 
-              placeholder="ابحث في الروابط، المجموعات... (Ctrl + K)" 
-              class="w-full bg-gray-50 dark:bg-slate-700/70 border border-gray-200 dark:border-slate-600 rounded-xl pr-9 pl-14 py-2 text-xs sm:text-sm text-slate-800 dark:text-slate-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
-            >
+            <input type="text" id="globalSearchInput" placeholder="ابحث في الروابط، المجموعات... (Ctrl + K)" class="inp !py-2 !pr-9 !pl-14 !text-xs sm:!text-sm">
             <div class="absolute right-3 text-gray-400 pointer-events-none">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
-            <kbd class="absolute left-2.5 hidden sm:inline-block bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded px-1.5 py-0.5 text-[10px] text-gray-400 font-mono shadow-sm">Ctrl K</kbd>
+            <kbd class="absolute left-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded px-1.5 py-0.5 text-[10px] text-gray-400 font-mono">Ctrl K</kbd>
           </div>
         </div>
 
-        <!-- أزرار الواجهة والوضع الليلي والخروج -->
-        <div class="flex items-center gap-2">
-          
-          <button id="viewLinksTabBtn" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl transition bg-green-600 text-white shadow-sm shadow-green-600/20">
-            <svg class="w-4 h-4 fill-current text-amber-300" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/></svg>
-            <span>الروابط</span>
-          </button>
-
-          <button id="viewSettingsTabBtn" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-medium rounded-xl transition bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600">
-            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            <span>الإعدادات</span>
-          </button>
-
+        <nav class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+          <button data-view="dashboard" class="tab-btn" title="الروابط">⚡<span class="hidden sm:inline">الروابط</span></button>
+          <button data-view="settings" class="tab-btn" title="إدارة الروابط">⚙️<span class="hidden sm:inline">الإدارة</span></button>
+          <button data-view="account" class="tab-btn" title="حسابي">👤<span class="hidden sm:inline">حسابي</span></button>
+          <button data-view="admin" id="adminTabBtn" class="tab-btn hidden" title="الإحصائيات">📊<span class="hidden sm:inline">الإحصائيات</span></button>
           <button id="darkModeToggle" title="الوضع الليلي / النهاري" class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition">
-            <svg id="moonIcon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-            <svg id="sunIcon" class="w-4 h-4 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            <svg class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            <svg class="w-4 h-4 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
           </button>
-
-          <!-- زر تسجيل الخروج والتبديل لحساب آخر -->
-          <button id="logoutBtn" title="تسجيل الخروج والتبديل لحساب آخر" class="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition">
+          <button id="logoutBtn" title="تسجيل الخروج" class="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
           </button>
-        </div>
-
+        </nav>
+      </div>
+      <!-- بحث للجوال -->
+      <div class="md:hidden pb-3">
+        <input type="text" id="mobileSearchInput" placeholder="ابحث في الروابط..." class="inp !py-2 !text-xs">
       </div>
     </div>
   </header>
 
   <!-- إشعار Toast -->
-  <div id="toast" class="fixed bottom-5 left-5 bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+  <div id="toast" class="fixed bottom-5 left-5 bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-[70] flex items-center gap-2 pointer-events-none">
     <span id="toastIcon">✓</span>
-    <span id="toastMessage">تم الإجراء بنجاح</span>
+    <span id="toastMessage"></span>
   </div>
 
   <!-- نافذة تأكيد الحذف -->
@@ -203,95 +238,72 @@
 
   <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
 
-    <!-- الواجهة 1: عرض الروابط المباشرة -->
+    <!-- تنبيه تأكيد البريد -->
+    <div id="verifyBanner" class="hidden mb-5 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 rounded-2xl px-4 py-3 text-xs flex flex-wrap items-center justify-between gap-2">
+      <span>📧 لم تؤكّد بريدك الإلكتروني بعد. افتح الرسالة التي أرسلناها إليك واضغط رابط التأكيد.</span>
+      <span class="flex items-center gap-2">
+        <button id="resendVerifyBtn" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-amber-300 dark:border-amber-800 rounded-lg font-semibold">إعادة الإرسال</button>
+        <button id="checkVerifyBtn" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-bold">أكّدتُ بريدي</button>
+      </span>
+    </div>
+
+    <!-- الواجهة 1: الروابط -->
     <section id="linksDashboardView" class="space-y-6">
       <div class="flex items-center justify-between gap-3 pb-3 border-b border-gray-200 dark:border-slate-700">
         <div id="dashboardCategoryBadges" class="flex items-center gap-2 overflow-x-auto pb-1 flex-1"></div>
-        <div class="flex items-center gap-2 flex-shrink-0">
-          <button id="goToSettingsBtn" class="text-xs font-semibold px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:border-green-500 rounded-xl text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5 shadow-sm">
-            <span class="text-green-500 font-bold text-sm">+</span>
-            <span>إضافة رابط جديد</span>
-          </button>
-        </div>
+        <button id="goToSettingsBtn" class="flex-shrink-0 text-xs font-semibold px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:border-green-500 rounded-xl text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5 shadow-sm">
+          <span class="text-green-500 font-bold text-sm">+</span><span>إضافة رابط جديد</span>
+        </button>
       </div>
-
       <div id="groupedRowsContainer" class="space-y-4"></div>
-
       <div id="dashboardEmptyState" class="hidden text-center py-16 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700 p-6">
         <div class="text-5xl mb-3">🔗</div>
         <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">لا توجد روابط مسجلة بعد</h3>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-md mx-auto">
-          اضغط على زر «+ إضافة رابط جديد» بالأعلى لبدء بناء مجموعات أدواتك وروابطك اليومية.
-        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-md mx-auto">اضغط على زر «+ إضافة رابط جديد» بالأعلى لبدء بناء مجموعات أدواتك وروابطك اليومية.</p>
       </div>
     </section>
 
-    <!-- الواجهة 2: صفحة الإعدادات وإدارة الروابط -->
+    <!-- الواجهة 2: إدارة الروابط -->
     <section id="settingsManageView" class="hidden space-y-6">
-      
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2">
-          <button id="toggleFormBtn" class="bg-brand-green hover:bg-brand-greenDark text-white px-4 py-2 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5">
-            <span class="text-base font-bold">+</span>
-            <span>رابط جديد</span>
-          </button>
-          <button id="sortLinksBtn" class="bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 px-3.5 py-2 rounded-xl font-medium text-xs sm:text-sm border border-gray-200 dark:border-slate-700 shadow-sm transition flex items-center gap-1.5">
-            <span id="sortBtnText">ترتيب أبجدي</span>
-          </button>
+          <button id="toggleFormBtn" class="bg-brand-green hover:bg-brand-greenDark text-white px-4 py-2 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5"><span class="text-base font-bold">+</span><span>رابط جديد</span></button>
+          <button id="sortLinksBtn" class="bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 px-3.5 py-2 rounded-xl font-medium text-xs sm:text-sm border border-gray-200 dark:border-slate-700 shadow-sm transition"><span id="sortBtnText">ترتيب أبجدي (أ - ي)</span></button>
         </div>
-
         <div class="flex items-center gap-2 text-xs">
-          <button id="exportDataBtn" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition font-medium">
-            تصدير نسخة (JSON)
-          </button>
+          <button id="exportDataBtn" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition font-medium">تصدير نسخة (JSON)</button>
           <label class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition font-medium cursor-pointer">
-            استيراد روابط
-            <input type="file" id="importFileInput" accept=".json" class="hidden">
+            استيراد روابط<input type="file" id="importFileInput" accept=".json" class="hidden">
           </label>
         </div>
       </div>
 
-      <!-- نموذج إضافة / تعديل رابط -->
-      <div id="linkFormCard" class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 border border-gray-200 dark:border-slate-700 shadow-sm transition-all">
+      <div id="linkFormCard" class="card sm:p-6">
         <div class="flex items-center justify-between mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
           <h3 id="formTitle" class="text-base font-bold text-slate-900 dark:text-white">رابط جديد</h3>
-          <span class="text-xs text-gray-400">تُحفظ البيانات الخاصة بحسابك تلقائياً</span>
+          <span class="text-xs text-gray-400">تُحفظ في حسابك وتتزامن مع كل أجهزتك</span>
         </div>
-
         <form id="linkForm" class="space-y-4">
           <input type="hidden" id="editLinkId" value="">
-
           <div class="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4 items-end">
-            <div class="flex flex-col">
-              <label for="groupInput" class="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-1.5 min-h-[34px] flex items-end">
-                <span>المجموعة <span class="text-[11px] text-gray-400 font-normal">(اختر أو اكتب جديداً)</span></span>
-              </label>
-              <input type="text" id="groupInput" list="existingGroupsList" placeholder="مثال: الذكاء الاصطناعي" required class="w-full h-10 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500">
+            <div>
+              <label for="groupInput" class="lbl">المجموعة <span class="text-[11px] text-gray-400 font-normal">(اختر أو اكتب جديداً)</span></label>
+              <input type="text" id="groupInput" list="existingGroupsList" placeholder="مثال: الذكاء الاصطناعي" required maxlength="60" class="inp">
               <datalist id="existingGroupsList"></datalist>
             </div>
-
-            <div class="flex flex-col">
-              <label for="iconInput" class="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-1.5 min-h-[34px] flex items-end">
-                <span>الأيقونة <span class="text-[11px] text-gray-400 font-normal">(شعار تلقائي أو رمز)</span></span>
-              </label>
-              <input type="text" id="iconInput" placeholder="رمز تعبيري (🤖) أو رابط صورة https://" class="w-full h-10 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500">
+            <div>
+              <label for="iconInput" class="lbl">الأيقونة <span class="text-[11px] text-gray-400 font-normal">(اختياري: رابط صورة)</span></label>
+              <input type="text" id="iconInput" placeholder="https://... (يُجلب الشعار تلقائياً)" class="inp" dir="ltr">
             </div>
-
-            <div class="flex flex-col">
-              <label for="nameInput" class="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-1.5 min-h-[34px] flex items-end">
-                <span>الاسم</span>
-              </label>
-              <input type="text" id="nameInput" placeholder="مثال: ChatGPT" required class="w-full h-10 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500">
+            <div>
+              <label for="nameInput" class="lbl">الاسم</label>
+              <input type="text" id="nameInput" placeholder="مثال: ChatGPT" required maxlength="80" class="inp">
             </div>
-
-            <div class="flex flex-col">
-              <label for="urlInput" class="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-1.5 min-h-[34px] flex items-end">
-                <span>الرابط</span>
-              </label>
-              <input type="url" id="urlInput" placeholder="https://..." required class="w-full h-10 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500" dir="ltr">
+            <div>
+              <label for="urlInput" class="lbl">الرابط</label>
+              <input type="text" id="urlInput" placeholder="https://..." required class="inp" dir="ltr">
             </div>
           </div>
-
           <div class="flex justify-end gap-2 pt-2">
             <button type="button" id="cancelFormBtn" class="px-5 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-600 transition">إلغاء</button>
             <button type="submit" class="px-6 py-2 text-xs font-bold text-white bg-brand-green hover:bg-brand-greenDark rounded-xl shadow-sm transition">حفظ الرابط</button>
@@ -306,10 +318,123 @@
       </div>
     </section>
 
+    <!-- الواجهة 3: حسابي -->
+    <section id="accountView" class="hidden space-y-5">
+      <div class="card sm:p-6">
+        <div class="flex items-center gap-4">
+          <div id="accAvatar" class="w-14 h-14 rounded-2xl bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center text-2xl font-black flex-shrink-0"></div>
+          <div class="min-w-0">
+            <div id="accName" class="text-lg font-extrabold truncate"></div>
+            <div id="accEmail" class="text-xs text-gray-500 dark:text-gray-400 truncate" dir="ltr" style="text-align:right"></div>
+            <div id="accVerified" class="mt-1.5"></div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5 text-center">
+          <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-3"><div class="text-[11px] text-gray-500 dark:text-gray-400">تاريخ التسجيل</div><div id="accCreated" class="text-sm font-bold mt-1"></div></div>
+          <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-3"><div class="text-[11px] text-gray-500 dark:text-gray-400">آخر دخول سابق</div><div id="accLastLogin" class="text-sm font-bold mt-1"></div></div>
+          <div class="bg-gray-50 dark:bg-slate-700/50 rounded-xl p-3"><div class="text-[11px] text-gray-500 dark:text-gray-400">عدد روابطك</div><div id="accLinks" class="text-sm font-bold mt-1"></div></div>
+        </div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-5">
+        <div class="card">
+          <h3 class="font-bold text-sm mb-3">✏️ تعديل الاسم</h3>
+          <form id="nameForm" class="space-y-3" novalidate>
+            <input type="text" id="accNameInput" class="inp" maxlength="60" placeholder="اسمك">
+            <div id="nameMsg" class="hidden"></div>
+            <button type="submit" class="btn-primary">حفظ الاسم</button>
+          </form>
+        </div>
+
+        <div class="card">
+          <h3 class="font-bold text-sm mb-3">🔒 تغيير كلمة المرور</h3>
+          <form id="passForm" class="space-y-3" novalidate>
+            <input type="password" id="accCurPass" class="inp" placeholder="كلمة المرور الحالية" autocomplete="current-password" dir="ltr">
+            <input type="password" id="accNewPass" class="inp" placeholder="كلمة المرور الجديدة (6 أحرف على الأقل)" autocomplete="new-password" dir="ltr">
+            <input type="password" id="accNewPass2" class="inp" placeholder="تأكيد كلمة المرور الجديدة" autocomplete="new-password" dir="ltr">
+            <div id="passMsg" class="hidden"></div>
+            <button type="submit" class="btn-primary">تغيير كلمة المرور</button>
+          </form>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-3">نسيت كلمتك الحالية؟ <button type="button" id="accResetBtn" class="text-green-600 dark:text-green-400 font-bold hover:underline">أرسل رابط إعادة التعيين إلى بريدي</button></p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 class="font-bold text-sm mb-2">☁️ أين تُحفظ بياناتك؟</h3>
+        <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">حسابك وروابطك محفوظة على خوادم Google Firebase، وتتزامن تلقائياً على كل جهاز تسجّل الدخول منه. كلمة مرورك لا يراها أحد، ولا حتى مدير الموقع. ويمكنك تصدير نسخة من روابطك في أي وقت من صفحة «الإدارة».</p>
+      </div>
+
+      <div class="card !border-rose-200 dark:!border-rose-900">
+        <h3 class="font-bold text-sm text-rose-600 dark:text-rose-400 mb-2">⚠️ حذف الحساب نهائياً</h3>
+        <p class="text-xs text-gray-600 dark:text-gray-300 mb-3">سيُحذف حسابك وكل روابطك ولا يمكن التراجع. اكتب كلمة مرورك للتأكيد.</p>
+        <form id="deleteAccForm" class="flex flex-col sm:flex-row gap-2" novalidate>
+          <input type="password" id="accDelPass" class="inp sm:flex-1" placeholder="كلمة المرور" autocomplete="current-password" dir="ltr">
+          <button type="submit" id="deleteAccBtn" class="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold text-sm transition whitespace-nowrap">حذف حسابي</button>
+        </form>
+        <div id="delMsg" class="hidden mt-3"></div>
+      </div>
+    </section>
+
+    <!-- الواجهة 4: إحصائيات المشرف -->
+    <section id="adminView" class="hidden space-y-5">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-lg font-extrabold">📊 إحصائيات المستخدمين</h2>
+        <div class="flex items-center gap-2 text-xs">
+          <button id="adminRefreshBtn" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-slate-700">🔄 تحديث</button>
+          <button id="adminCsvBtn" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-slate-700">⬇️ تصدير Excel (CSV)</button>
+        </div>
+      </div>
+      <div id="adminStats" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+      <div class="card">
+        <h3 class="font-bold text-sm mb-4">التسجيلات الجديدة في آخر 14 يوماً</h3>
+        <div id="adminChart" class="flex items-end gap-1 h-36" dir="ltr"></div>
+      </div>
+      <div class="card">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h3 class="font-bold text-sm">قائمة المسجّلين</h3>
+          <input type="text" id="adminSearch" class="inp !w-56 !py-1.5 !text-xs" placeholder="بحث بالاسم أو البريد...">
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-right">
+            <thead class="text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-slate-700">
+              <tr><th class="py-2 px-2">#</th><th class="py-2 px-2">الاسم</th><th class="py-2 px-2">البريد</th><th class="py-2 px-2">مؤكد</th><th class="py-2 px-2">التسجيل</th><th class="py-2 px-2">آخر نشاط</th><th class="py-2 px-2">الروابط</th></tr>
+            </thead>
+            <tbody id="adminTableBody"></tbody>
+          </table>
+        </div>
+        <p class="text-[11px] text-gray-400 mt-3">🔐 حفاظاً على الخصوصية: المشرف يرى عدد روابط كل مستخدم فقط، لا محتواها.</p>
+      </div>
+    </section>
+
   </main>
 
-  <script>
-    const GOOGLE_CLIENT_ID = "907151890334-j8m0cq0ettidfe7pm1f8k97p3r799amh.apps.googleusercontent.com";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+      getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+      sendPasswordResetEmail, sendEmailVerification, updateProfile, updatePassword,
+      reauthenticateWithCredential, EmailAuthProvider, deleteUser, signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import {
+      initializeFirestore, getFirestore, persistentLocalCache, doc, getDoc, setDoc, deleteDoc,
+      collection, getDocs, query, orderBy, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // =====================================================================
+    // ⚙️ الإعدادات — هذا هو القسم الوحيد الذي تملؤه (انظر دليل الإعداد)
+    // =====================================================================
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyDWFsDTPbCpRngVxb88vQepO-TgQg7mnO4",
+      authDomain: "mysnaplinks.firebaseapp.com",
+      projectId: "mysnaplinks",
+      storageBucket: "mysnaplinks.firebasestorage.app",
+      messagingSenderId: "907151890334",
+      appId: "1:907151890334:web:a8e8f93c1397a41229a88f",
+      measurementId: "G-2SMS4901NQ"
+    };
+    // بريد المشرف/المشرفين الذين تظهر لهم صفحة الإحصائيات (يجب أن يطابق قواعد Firestore)
+    const ADMIN_EMAILS = ["mysnaplinks@gmail.com"];
+    // =====================================================================
 
     const INITIAL_LINKS = [
       { id: '1', name: 'Claude', url: 'https://claude.ai/new', group: 'الذكاء الاصطناعي', icon: 'https://claude.ai/favicon.ico' },
@@ -319,368 +444,464 @@
       { id: '5', name: 'Blogger', url: 'https://www.blogger.com', group: 'إدارة المحتوى', icon: 'https://www.blogger.com/favicon.ico' },
       { id: '6', name: 'Google Drive', url: 'https://drive.google.com', group: 'أدوات العمل', icon: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png' }
     ];
+    const MAX_LINKS = 2000;
 
-    let currentEmail = '';
+    // ===== تهيئة Firebase =====
+    const configReady = !String(FIREBASE_CONFIG.apiKey).startsWith('YOUR');
+    let auth = null, db = null;
+    if (configReady) {
+      const app = initializeApp(FIREBASE_CONFIG);
+      auth = getAuth(app);
+      auth.languageCode = 'ar'; // رسائل البريد (الاستعادة والتأكيد) بالعربية
+      try { db = initializeFirestore(app, { localCache: persistentLocalCache() }); }
+      catch (e) { db = getFirestore(app); }
+    }
+
+    // ===== الحالة =====
+    let currentUser = null;
+    let profile = null;
     let links = [];
     let currentView = 'dashboard';
     let currentCategory = 'all';
     let searchQuery = '';
     let sortAscending = true;
     let pendingDeleteId = null;
+    let pendingRegisterName = null;
+    let welcomeMode = null; // 'new' | 'login' | null
+    let adminUsers = [];
 
-    const authModal = document.getElementById('authModal');
-    const universalLoginForm = document.getElementById('universalLoginForm');
-    const userEmailInput = document.getElementById('userEmailInput');
-    const userPinInput = document.getElementById('userPinInput');
-    const activeEmailLabel = document.getElementById('activeEmailLabel');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const googleDirectBtn = document.getElementById('googleDirectBtn');
+    const $ = (id) => document.getElementById(id);
+    const authModal = $('authModal'), loadingScreen = $('loadingScreen');
+    const activeEmailLabel = $('activeEmailLabel');
+    const groupedRowsContainer = $('groupedRowsContainer'), dashboardEmptyState = $('dashboardEmptyState');
+    const dashboardCategoryBadges = $('dashboardCategoryBadges');
+    const settingsCategoryTabs = $('settingsCategoryTabs'), settingsCardsContainer = $('settingsCardsContainer'), settingsEmptyState = $('settingsEmptyState');
+    const linkFormCard = $('linkFormCard'), linkForm = $('linkForm'), formTitle = $('formTitle'), editLinkId = $('editLinkId');
+    const groupInput = $('groupInput'), iconInput = $('iconInput'), nameInput = $('nameInput'), urlInput = $('urlInput');
+    const deleteModal = $('deleteModal');
+    const searchInputs = [$('globalSearchInput'), $('mobileSearchInput')];
+    const VIEWS = { dashboard: $('linksDashboardView'), settings: $('settingsManageView'), account: $('accountView'), admin: $('adminView') };
 
-    const viewLinksTabBtn = document.getElementById('viewLinksTabBtn');
-    const viewSettingsTabBtn = document.getElementById('viewSettingsTabBtn');
-    const linksDashboardView = document.getElementById('linksDashboardView');
-    const settingsManageView = document.getElementById('settingsManageView');
-    const goToSettingsBtn = document.getElementById('goToSettingsBtn');
-
-    const globalSearchInput = document.getElementById('globalSearchInput');
-    const darkModeToggle = document.getElementById('darkModeToggle');
-
-    const dashboardCategoryBadges = document.getElementById('dashboardCategoryBadges');
-    const groupedRowsContainer = document.getElementById('groupedRowsContainer');
-    const dashboardEmptyState = document.getElementById('dashboardEmptyState');
-
-    const linkFormCard = document.getElementById('linkFormCard');
-    const linkForm = document.getElementById('linkForm');
-    const formTitle = document.getElementById('formTitle');
-    const editLinkId = document.getElementById('editLinkId');
-    const groupInput = document.getElementById('groupInput');
-    const iconInput = document.getElementById('iconInput');
-    const nameInput = document.getElementById('nameInput');
-    const urlInput = document.getElementById('urlInput');
-    const existingGroupsList = document.getElementById('existingGroupsList');
-    const toggleFormBtn = document.getElementById('toggleFormBtn');
-    const cancelFormBtn = document.getElementById('cancelFormBtn');
-    const sortLinksBtn = document.getElementById('sortLinksBtn');
-    const sortBtnText = document.getElementById('sortBtnText');
-    const exportDataBtn = document.getElementById('exportDataBtn');
-    const importFileInput = document.getElementById('importFileInput');
-    const settingsCategoryTabs = document.getElementById('settingsCategoryTabs');
-    const settingsCardsContainer = document.getElementById('settingsCardsContainer');
-    const settingsEmptyState = document.getElementById('settingsEmptyState');
-
-    const deleteModal = document.getElementById('deleteModal');
-    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    const toast = document.getElementById('toast');
-    const toastMessage = document.getElementById('toastMessage');
-    const toastIcon = document.getElementById('toastIcon');
-
-    // تسجيل الدخول بأي بريد إلكتروني يختاره المستخدم
-    universalLoginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email = userEmailInput.value.trim().toLowerCase();
-      const pin = userPinInput.value.trim();
-
-      if (!email || !pin) return;
-
-      const userKey = `mysnap_pin_${email}`;
-      const savedPin = localStorage.getItem(userKey);
-
-      if (savedPin && (savedPin !== pin || savedPin === '__google_only__')) {
-        showToast('رمز المرور غير صحيح لهذا الحساب!', '⚠️');
-        return;
-      }
-
-      if (!savedPin) {
-        localStorage.setItem(userKey, pin);
-      }
-
-      loginUser(email);
-    });
-
-    function loginUser(email) {
-      currentEmail = email;
-      localStorage.setItem('mysnap_active_session', email);
-      activeEmailLabel.textContent = email;
-      authModal.classList.add('hidden');
-      showToast(`أهلاً بك: ${email}`);
-      loadUserLinks();
-      switchView('dashboard');
+    // ===== أدوات عامة =====
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    logoutBtn.addEventListener('click', () => {
-      localStorage.removeItem('mysnap_active_session');
-      currentEmail = '';
-      links = [];
-      currentCategory = 'all';
-      searchQuery = '';
-      globalSearchInput.value = '';
-      groupedRowsContainer.innerHTML = '';
-      settingsCardsContainer.innerHTML = '';
-      dashboardCategoryBadges.innerHTML = '';
-      settingsCategoryTabs.innerHTML = '';
-      closeForm();
-      userEmailInput.value = '';
-      userPinInput.value = '';
+    let toastTimer = null;
+    function showToast(message, icon = '✓') {
+      $('toastMessage').textContent = message;
+      $('toastIcon').textContent = icon;
+      const t = $('toast');
+      t.classList.remove('translate-y-20', 'opacity-0');
+      t.classList.add('translate-y-0', 'opacity-100');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        t.classList.remove('translate-y-0', 'opacity-100');
+        t.classList.add('translate-y-20', 'opacity-0');
+      }, 2800);
+    }
+
+    function setMsg(el, msg, type = 'err') {
+      if (!msg) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+      el.className = type;
+      el.innerHTML = msg;
+    }
+
+    function setBusy(form, busy, busyText = 'جاري التنفيذ...') {
+      const btn = form.querySelector('button[type="submit"]');
+      if (!btn) return;
+      if (busy) { btn.dataset.label = btn.textContent; btn.textContent = busyText; btn.disabled = true; }
+      else { btn.textContent = btn.dataset.label || btn.textContent; btn.disabled = false; }
+    }
+
+    const isValidEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
+    const toDate = (ts) => !ts ? null : (typeof ts.toDate === 'function' ? ts.toDate() : new Date(ts));
+    const fmtDate = (d, withTime = false) => !d ? '—' : d.toLocaleString('ar-u-nu-latn', withTime
+      ? { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }
+      : { year: 'numeric', month: 'short', day: 'numeric' });
+
+    function getFaviconUrl(link) {
+      if (link.icon && /^https?:\/\//i.test(link.icon.trim())) return link.icon.trim();
+      try { return `https://www.google.com/s2/favicons?domain=${new URL(link.url).hostname}&sz=64`; }
+      catch (e) { return 'https://www.google.com/s2/favicons?domain=google.com&sz=64'; }
+    }
+
+    function sanitizeLinks(arr) {
+      if (!Array.isArray(arr)) return [];
+      return arr
+        .filter(l => l && typeof l.url === 'string' && /^https?:\/\//i.test(l.url.trim()) && typeof l.name === 'string' && l.name.trim())
+        .slice(0, MAX_LINKS)
+        .map((l, i) => ({
+          id: String(l.id || (Date.now() + '_' + i)),
+          name: l.name.trim().slice(0, 80),
+          url: l.url.trim(),
+          group: (String(l.group || '').trim() || 'عام').slice(0, 60),
+          icon: (typeof l.icon === 'string' && /^https?:\/\//i.test(l.icon.trim())) ? l.icon.trim() : ''
+        }));
+    }
+
+    function authErrorMessage(code, ctx = '') {
+      switch (code) {
+        case 'auth/invalid-credential':
+        case 'auth/wrong-password':
+        case 'auth/user-not-found':
+          if (ctx === 'login') return 'البريد الإلكتروني أو كلمة المرور غير صحيحة. إن لم يكن لديك حساب <button type="button" class="inline-to-register font-bold underline">أنشئ حساباً جديداً</button>، وإن نسيت كلمة المرور <button type="button" class="inline-to-forgot font-bold underline">استعِدها من هنا</button>.';
+          return 'كلمة المرور الحالية غير صحيحة.';
+        case 'auth/email-already-in-use': return 'هذا البريد مسجّل مسبقاً. <button type="button" class="inline-to-login font-bold underline">سجّل الدخول</button> أو <button type="button" class="inline-to-forgot font-bold underline">استعِد كلمة المرور</button>.';
+        case 'auth/invalid-email': return 'صيغة البريد الإلكتروني غير صحيحة.';
+        case 'auth/weak-password': return 'كلمة المرور ضعيفة، اجعلها 6 أحرف على الأقل.';
+        case 'auth/missing-password': return 'اكتب كلمة المرور.';
+        case 'auth/user-disabled': return 'هذا الحساب موقوف. تواصل مع إدارة الموقع.';
+        case 'auth/too-many-requests': return 'محاولات كثيرة متتالية. انتظر قليلاً ثم حاول مجدداً.';
+        case 'auth/network-request-failed': return 'تعذر الاتصال بالإنترنت. تحقق من اتصالك.';
+        case 'auth/requires-recent-login': return 'لأمان حسابك، سجّل الخروج ثم الدخول من جديد وأعد المحاولة.';
+        case 'auth/operation-not-allowed': return 'تسجيل الدخول بالبريد غير مفعّل في Firebase (Authentication ← Sign-in method).';
+        case 'auth/unauthorized-domain':
+        case 'auth/unauthorized-continue-uri': return 'هذا النطاق غير مضاف في Firebase (Authentication ← Settings ← Authorized domains).';
+        case 'permission-denied': return 'ليست لديك صلاحية لهذه العملية (راجع قواعد Firestore).';
+        default: return 'حدث خطأ غير متوقع' + (code ? ` (${escapeHtml(code)})` : '') + '. حاول مجدداً.';
+      }
+    }
+
+    // ===== شاشات الدخول =====
+    const AUTH_SCREENS = ['welcome', 'login', 'register', 'forgot'];
+    function showAuthScreen(name) {
+      AUTH_SCREENS.forEach(s => $(s + 'Screen').classList.toggle('hidden', s !== name));
+      ['loginError', 'registerError', 'forgotError', 'forgotSuccess'].forEach(id => setMsg($(id), ''));
+      const focusMap = { login: 'loginEmail', register: 'regName', forgot: 'forgotEmail' };
+      if (focusMap[name]) setTimeout(() => $(focusMap[name]).focus(), 50);
+    }
+    function carryEmail(fromId, toId) { const v = $(fromId).value.trim(); if (v) $(toId).value = v; }
+
+    $('goLoginBtn').addEventListener('click', () => showAuthScreen('login'));
+    $('goRegisterBtn').addEventListener('click', () => showAuthScreen('register'));
+    $('goForgotBtn').addEventListener('click', () => { carryEmail('loginEmail', 'forgotEmail'); showAuthScreen('forgot'); });
+    document.querySelectorAll('.auth-back').forEach(b => b.addEventListener('click', () => showAuthScreen('welcome')));
+    document.querySelectorAll('.switch-to-register').forEach(b => b.addEventListener('click', () => { carryEmail('loginEmail', 'regEmail'); showAuthScreen('register'); }));
+    document.querySelectorAll('.switch-to-login').forEach(b => b.addEventListener('click', () => { carryEmail('regEmail', 'loginEmail'); carryEmail('forgotEmail', 'loginEmail'); showAuthScreen('login'); }));
+
+    // روابط داخل رسائل الخطأ
+    authModal.addEventListener('click', (e) => {
+      const t = e.target;
+      if (t.classList.contains('inline-to-register')) { carryEmail('loginEmail', 'regEmail'); showAuthScreen('register'); }
+      else if (t.classList.contains('inline-to-login')) { carryEmail('regEmail', 'loginEmail'); showAuthScreen('login'); }
+      else if (t.classList.contains('inline-to-forgot')) { carryEmail('loginEmail', 'forgotEmail'); carryEmail('regEmail', 'forgotEmail'); showAuthScreen('forgot'); }
+    });
+
+    // تسجيل الدخول
+    $('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget, err = $('loginError');
+      const email = $('loginEmail').value.trim().toLowerCase();
+      const pass = $('loginPass').value;
+      if (!isValidEmail(email)) return setMsg(err, 'اكتب بريداً إلكترونياً صحيحاً.');
+      if (!pass) return setMsg(err, 'اكتب كلمة المرور.');
+      setMsg(err, ''); setBusy(form, true, 'جاري الدخول...');
+      try {
+        welcomeMode = 'login';
+        await signInWithEmailAndPassword(auth, email, pass);
+      } catch (ex) {
+        welcomeMode = null;
+        setMsg(err, authErrorMessage(ex.code, 'login'));
+      } finally { setBusy(form, false); }
+    });
+
+    // إنشاء حساب
+    $('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget, err = $('registerError');
+      const name = $('regName').value.trim();
+      const email = $('regEmail').value.trim().toLowerCase();
+      const pass = $('regPass').value, pass2 = $('regPass2').value;
+      if (!name) return setMsg(err, 'اكتب اسمك.');
+      if (!isValidEmail(email)) return setMsg(err, 'اكتب بريداً إلكترونياً صحيحاً.');
+      if (pass.length < 6) return setMsg(err, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.');
+      if (pass !== pass2) return setMsg(err, 'كلمتا المرور غير متطابقتين.');
+      setMsg(err, ''); setBusy(form, true, 'جاري إنشاء الحساب...');
+      try {
+        pendingRegisterName = name; welcomeMode = 'new';
+        const cred = await createUserWithEmailAndPassword(auth, email, pass);
+        try { await updateProfile(cred.user, { displayName: name }); } catch (x) {}
+        try { await sendEmailVerification(cred.user); } catch (x) {}
+      } catch (ex) {
+        pendingRegisterName = null; welcomeMode = null;
+        setMsg(err, authErrorMessage(ex.code, 'register'));
+      } finally { setBusy(form, false); }
+    });
+
+    // استعادة كلمة المرور
+    $('forgotForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget;
+      const email = $('forgotEmail').value.trim().toLowerCase();
+      setMsg($('forgotSuccess'), '');
+      if (!isValidEmail(email)) return setMsg($('forgotError'), 'اكتب بريداً إلكترونياً صحيحاً.');
+      setMsg($('forgotError'), ''); setBusy(form, true, 'جاري الإرسال...');
+      try {
+        await sendPasswordResetEmail(auth, email);
+        setMsg($('forgotSuccess'), `إذا كان البريد <b dir="ltr">${escapeHtml(email)}</b> مسجّلاً لدينا، فستصلك خلال دقائق رسالة فيها رابط لتعيين كلمة مرور جديدة. تحقق أيضاً من مجلد الرسائل غير المرغوبة (Spam).`, 'ok');
+      } catch (ex) {
+        setMsg($('forgotError'), authErrorMessage(ex.code));
+      } finally { setBusy(form, false); }
+    });
+
+    // ===== حالة الدخول (يُستدعى تلقائياً عند الدخول/الخروج/فتح الصفحة) =====
+    if (configReady) {
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          currentUser = user;
+          try {
+            await loadUserData(user);
+          } catch (ex) {
+            console.error(ex);
+            showToast('تعذر تحميل بياناتك من السحابة', '⚠️');
+            if (!profile) profile = { name: user.displayName || user.email.split('@')[0], email: user.email, linksCount: links.length };
+          }
+          applyUserToUI();
+          authModal.classList.add('hidden');
+          loadingScreen.classList.add('hidden');
+          ['loginForm', 'registerForm', 'forgotForm'].forEach(id => $(id).reset());
+          if (welcomeMode === 'new') showToast(`أهلاً بك يا ${profile.name}، تم إنشاء حسابك 🎉`);
+          else if (welcomeMode === 'login') showToast(`أهلاً بعودتك يا ${profile.name}`);
+          welcomeMode = null; pendingRegisterName = null;
+          switchView('dashboard');
+        } else {
+          resetState();
+          loadingScreen.classList.add('hidden');
+          showAuthScreen('welcome');
+          authModal.classList.remove('hidden');
+        }
+      });
+    } else {
+      loadingScreen.classList.add('hidden');
       authModal.classList.remove('hidden');
+      showAuthScreen('welcome');
+      $('setupNotice').classList.remove('hidden');
+      $('goLoginBtn').disabled = true; $('goRegisterBtn').disabled = true;
+      $('goLoginBtn').classList.add('opacity-50'); $('goRegisterBtn').classList.add('opacity-50');
+    }
+
+    // ===== تحميل وحفظ البيانات =====
+    // البنية في Firestore:
+    //   users/{uid}  → { name, email, emailVerified, createdAt, lastLoginAt, linksCount }
+    //   links/{uid}  → { links: [ {id,name,url,group,icon} ], updatedAt }
+    async function loadUserData(user) {
+      const uref = doc(db, 'users', user.uid);
+      const lref = doc(db, 'links', user.uid);
+      const [usnap, lsnap] = await Promise.all([getDoc(uref), getDoc(lref)]);
+
+      if (lsnap.exists() && Array.isArray(lsnap.data().links)) {
+        links = lsnap.data().links;
+      } else {
+        // أول دخول: ترحيل الروابط القديمة المحفوظة في المتصفح إن وُجدت، وإلا الروابط الافتراضية
+        let old = null;
+        try { old = JSON.parse(localStorage.getItem(`mysnaplinks_store_${user.email.toLowerCase()}`) || 'null'); } catch (x) {}
+        const migrated = sanitizeLinks(old);
+        links = migrated.length ? migrated : INITIAL_LINKS.map(l => ({ ...l }));
+        await setDoc(lref, { links, updatedAt: serverTimestamp() });
+        if (migrated.length) { try { localStorage.removeItem(`mysnaplinks_store_${user.email.toLowerCase()}`); } catch (x) {} }
+      }
+
+      if (!usnap.exists()) {
+        const name = pendingRegisterName || user.displayName || user.email.split('@')[0];
+        await setDoc(uref, { name, email: user.email, emailVerified: user.emailVerified, linksCount: links.length, createdAt: serverTimestamp(), lastLoginAt: serverTimestamp() });
+        profile = { name, email: user.email, linksCount: links.length, createdAt: new Date(), prevLogin: null };
+      } else {
+        const d = usnap.data();
+        profile = { name: d.name || user.displayName || user.email.split('@')[0], email: user.email, linksCount: links.length, createdAt: toDate(d.createdAt), prevLogin: toDate(d.lastLoginAt) };
+        await setDoc(uref, { email: user.email, emailVerified: user.emailVerified, linksCount: links.length, lastLoginAt: serverTimestamp() }, { merge: true });
+      }
+    }
+
+    let saveTimer = null;
+    function saveUserLinks() {
+      if (!currentUser) return;
+      const uid = currentUser.uid;
+      $('syncDot').className = 'w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse';
+      $('syncDot').title = 'جاري المزامنة...';
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(async () => {
+        try {
+          await setDoc(doc(db, 'links', uid), { links, updatedAt: serverTimestamp() });
+          await setDoc(doc(db, 'users', uid), { linksCount: links.length }, { merge: true });
+          if (profile) profile.linksCount = links.length;
+          $('syncDot').className = 'w-2 h-2 rounded-full bg-green-500 inline-block';
+          $('syncDot').title = 'متزامن';
+        } catch (ex) {
+          console.error(ex);
+          $('syncDot').className = 'w-2 h-2 rounded-full bg-rose-500 inline-block';
+          $('syncDot').title = 'فشل الحفظ';
+          showToast('تعذر الحفظ في السحابة، تحقق من الاتصال', '⚠️');
+        }
+      }, 500);
+    }
+
+    function isAdmin() {
+      return !!(currentUser && currentUser.emailVerified && ADMIN_EMAILS.map(x => x.toLowerCase()).includes((currentUser.email || '').toLowerCase()));
+    }
+
+    function applyUserToUI() {
+      activeEmailLabel.textContent = profile ? profile.name : '';
+      activeEmailLabel.title = currentUser ? currentUser.email : '';
+      $('adminTabBtn').classList.toggle('hidden', !isAdmin());
+      $('verifyBanner').classList.toggle('hidden', !currentUser || currentUser.emailVerified);
+    }
+
+    function resetState() {
+      currentUser = null; profile = null; links = []; adminUsers = [];
+      currentCategory = 'all'; searchQuery = ''; pendingDeleteId = null;
+      searchInputs.forEach(i => i.value = '');
+      [groupedRowsContainer, settingsCardsContainer, dashboardCategoryBadges, settingsCategoryTabs, $('adminTableBody'), $('adminStats'), $('adminChart')].forEach(el => el.innerHTML = '');
+      activeEmailLabel.textContent = '';
+      $('adminTabBtn').classList.add('hidden');
+      $('verifyBanner').classList.add('hidden');
+      ['nameForm', 'passForm', 'deleteAccForm'].forEach(id => $(id).reset());
+      ['nameMsg', 'passMsg', 'delMsg'].forEach(id => setMsg($(id), ''));
+      closeForm();
+    }
+
+    $('logoutBtn').addEventListener('click', async () => {
+      if (!auth) return;
+      await signOut(auth);
       showToast('تم تسجيل الخروج بنجاح');
     });
 
-    function checkActiveSession() {
-      const savedSession = localStorage.getItem('mysnap_active_session');
-      if (savedSession) {
-        loginUser(savedSession);
-      } else {
-        authModal.classList.remove('hidden');
-      }
-    }
-
-    // زر جوجل الفوري
-    googleDirectBtn.addEventListener('click', () => {
-      if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-        google.accounts.id.prompt((notification) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            userEmailInput.focus();
-            showToast('تعذر فتح نافذة جوجل، سجّل الدخول بالبريد والرمز', 'ℹ️');
-          }
-        });
-      } else {
-        userEmailInput.focus();
-        showToast('تعذر فتح نافذة جوجل، سجّل الدخول بالبريد والرمز', 'ℹ️');
-      }
+    // تأكيد البريد
+    $('resendVerifyBtn').addEventListener('click', async () => {
+      try { await sendEmailVerification(currentUser); showToast('أُرسلت رسالة التأكيد إلى بريدك 📧'); }
+      catch (ex) { showToast(ex.code === 'auth/too-many-requests' ? 'انتظر قليلاً قبل إعادة الإرسال' : 'تعذر الإرسال', '⚠️'); }
+    });
+    $('checkVerifyBtn').addEventListener('click', async () => {
+      try {
+        await currentUser.reload();
+        if (currentUser.emailVerified) {
+          await currentUser.getIdToken(true);
+          await setDoc(doc(db, 'users', currentUser.uid), { emailVerified: true }, { merge: true });
+          applyUserToUI(); if (currentView === 'account') renderAccount();
+          showToast('تم تأكيد بريدك بنجاح ✅');
+        } else {
+          showToast('لم يتم التأكيد بعد. افتح الرابط في رسالة البريد أولاً', 'ℹ️');
+        }
+      } catch (ex) { showToast('تعذر التحقق، حاول مجدداً', '⚠️'); }
     });
 
-    function parseJwt(token) {
-      try {
-        const base64Url = token.split('.')[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-        return JSON.parse(jsonPayload);
-      } catch (e) { return null; }
-    }
-
-    function initGoogleAuth() {
-      let gsiTries = 0;
-      const checkGsi = setInterval(() => {
-        if (++gsiTries > 60) { clearInterval(checkGsi); return; }
-        if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
-          clearInterval(checkGsi);
-          try {
-            google.accounts.id.initialize({
-              client_id: GOOGLE_CLIENT_ID,
-              callback: (res) => {
-                const payload = parseJwt(res.credential);
-                if (payload && payload.email) {
-                  const gEmail = payload.email.toLowerCase();
-                  if (!localStorage.getItem(`mysnap_pin_${gEmail}`)) localStorage.setItem(`mysnap_pin_${gEmail}`, '__google_only__');
-                  loginUser(gEmail);
-                }
-              }
-            });
-          } catch(e) {}
-        }
-      }, 150);
-    }
-
-    function getUserStorageKey() {
-      return currentEmail ? `mysnaplinks_store_${currentEmail}` : 'mysnaplinks_store_guest';
-    }
-
-    function loadUserLinks() {
-      try {
-        const key = getUserStorageKey();
-        const saved = localStorage.getItem(key);
-        if (saved) {
-          links = JSON.parse(saved);
-        } else {
-          links = [...INITIAL_LINKS];
-          saveUserLinks();
-        }
-      } catch (e) {
-        links = [...INITIAL_LINKS];
-      }
-      renderDashboard();
-    }
-
-    function saveUserLinks() {
-      try {
-        const key = getUserStorageKey();
-        localStorage.setItem(key, JSON.stringify(links));
-      } catch (e) {}
-    }
-
-    function showToast(message, icon = '✓') {
-      toastMessage.textContent = message;
-      toastIcon.textContent = icon;
-      toast.classList.remove('translate-y-20', 'opacity-0');
-      toast.classList.add('translate-y-0', 'opacity-100');
-      clearTimeout(showToast._t);
-      showToast._t = setTimeout(() => {
-        toast.classList.remove('translate-y-0', 'opacity-100');
-        toast.classList.add('translate-y-20', 'opacity-0');
-      }, 2500);
-    }
-
-    function getFaviconUrl(link) {
-      if (link.icon && link.icon.trim() !== '') return link.icon.trim();
-      try {
-        const domain = new URL(link.url).hostname;
-        return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
-      } catch (e) {
-        return 'https://www.google.com/s2/favicons?domain=google.com&sz=64';
-      }
-    }
+    // ===== التنقل بين الواجهات =====
+    const TAB_BASE = 'tab-btn flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm rounded-xl transition';
+    const TAB_ON = ' font-bold bg-green-600 text-white shadow-sm shadow-green-600/20';
+    const TAB_OFF = ' font-medium bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600';
 
     function switchView(view) {
+      if (view === 'admin' && !isAdmin()) view = 'dashboard';
       currentView = view;
-      if (view === 'dashboard') {
-        linksDashboardView.classList.remove('hidden');
-        settingsManageView.classList.add('hidden');
-        viewLinksTabBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl transition bg-green-600 text-white shadow-sm shadow-green-600/20';
-        viewSettingsTabBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-medium rounded-xl transition bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600';
-        renderDashboard();
-      } else {
-        linksDashboardView.classList.add('hidden');
-        settingsManageView.classList.remove('hidden');
-        viewSettingsTabBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl transition bg-green-600 text-white shadow-sm shadow-green-600/20';
-        viewLinksTabBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-medium rounded-xl transition bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600';
-        renderSettings();
-      }
+      Object.entries(VIEWS).forEach(([k, el]) => el.classList.toggle('hidden', k !== view));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const hidden = btn.classList.contains('hidden');
+        btn.className = TAB_BASE + (btn.dataset.view === view ? TAB_ON : TAB_OFF) + (hidden ? ' hidden' : '');
+      });
+      if (view === 'dashboard') renderDashboard();
+      else if (view === 'settings') renderSettings();
+      else if (view === 'account') renderAccount();
+      else if (view === 'admin') loadAdmin();
     }
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchView(btn.dataset.view)));
+    $('goToSettingsBtn').addEventListener('click', () => { switchView('settings'); openNewForm(); });
 
-    viewLinksTabBtn.addEventListener('click', () => switchView('dashboard'));
-    viewSettingsTabBtn.addEventListener('click', () => switchView('settings'));
-    goToSettingsBtn.addEventListener('click', () => { switchView('settings'); openNewForm(); });
-
-    darkModeToggle.addEventListener('click', () => {
+    $('darkModeToggle').addEventListener('click', () => {
       const isDark = document.documentElement.classList.toggle('dark');
       try { localStorage.setItem('mysnap_theme', isDark ? 'dark' : 'light'); } catch (e) {}
     });
 
+    // ===== عرض الروابط =====
+    const getGroups = () => Array.from(new Set(links.map(l => (l.group || '').trim()).filter(Boolean)));
+    const matchesSearch = (l, q) => l.name.toLowerCase().includes(q) || l.url.toLowerCase().includes(q) || l.group.toLowerCase().includes(q);
+
     function updateGroupsDatalist() {
-      const groups = Array.from(new Set(links.map(l => l.group.trim()).filter(Boolean)));
-      existingGroupsList.innerHTML = groups.map(g => `<option value="${escapeHtml(g)}">`).join('');
+      $('existingGroupsList').innerHTML = getGroups().map(g => `<option value="${escapeHtml(g)}">`).join('');
     }
 
+    function categoryButtons(groups, cls, onClass, offClass) {
+      let html = `<button data-cat="all" class="${cls} px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${currentCategory === 'all' ? onClass : offClass}">الكل (${links.length})</button>`;
+      groups.forEach(g => {
+        const count = links.filter(l => l.group.trim() === g).length;
+        html += `<button data-cat="${escapeHtml(g)}" class="${cls} px-3 py-1.5 rounded-xl text-xs font-medium transition whitespace-nowrap ${currentCategory === g ? onClass + ' font-bold' : offClass}">${escapeHtml(g)} (${count})</button>`;
+      });
+      return html;
+    }
+    const OFF_CAT = 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700';
+
     function renderDashboard() {
-      const groups = Array.from(new Set(links.map(l => l.group.trim()).filter(Boolean)));
+      const groups = getGroups();
       updateGroupsDatalist();
-
-      let badgesHtml = `
-        <button data-cat="all" class="dash-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${currentCategory === 'all' ? 'bg-green-600 text-white shadow-sm' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'}">
-          الكل (${links.length})
-        </button>
-      `;
-      groups.forEach(group => {
-        const count = links.filter(l => l.group.trim() === group).length;
-        const isActive = currentCategory === group;
-        badgesHtml += `
-          <button data-cat="${escapeHtml(group)}" class="dash-cat-btn px-3 py-1.5 rounded-xl text-xs font-medium transition whitespace-nowrap ${isActive ? 'bg-green-600 text-white shadow-sm font-bold' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'}">
-            ${escapeHtml(group)} (${count})
-          </button>
-        `;
-      });
-      dashboardCategoryBadges.innerHTML = badgesHtml;
-      dashboardCategoryBadges.querySelectorAll('.dash-cat-btn').forEach(btn => {
-        btn.addEventListener('click', () => { currentCategory = btn.getAttribute('data-cat'); renderDashboard(); });
-      });
-
       if (currentCategory !== 'all' && !groups.includes(currentCategory)) currentCategory = 'all';
-      let activeGroups = currentCategory !== 'all' ? [currentCategory] : groups;
+
+      dashboardCategoryBadges.innerHTML = categoryButtons(groups, 'dash-cat-btn', 'bg-green-600 text-white shadow-sm', OFF_CAT);
+      dashboardCategoryBadges.querySelectorAll('.dash-cat-btn').forEach(btn => btn.addEventListener('click', () => { currentCategory = btn.getAttribute('data-cat'); renderDashboard(); }));
+
+      const activeGroups = currentCategory !== 'all' ? [currentCategory] : groups;
       const q = searchQuery.toLowerCase().trim();
-      let totalMatchingLinks = 0;
-      let rowsHtml = '';
+      let total = 0, html = '';
 
       activeGroups.forEach(group => {
-        let groupLinks = links.filter(l => l.group.trim() === group);
-        if (q) {
-          groupLinks = groupLinks.filter(l => l.name.toLowerCase().includes(q) || l.url.toLowerCase().includes(q) || l.group.toLowerCase().includes(q));
-        }
-        if (groupLinks.length === 0) return;
-        totalMatchingLinks += groupLinks.length;
-
-        rowsHtml += `
-          <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-slate-700 shadow-sm hover:border-gray-300 dark:hover:border-slate-600 transition">
-            <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100 dark:border-slate-700/60">
-              <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
-                <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">${escapeHtml(group)}</h3>
-                <span class="text-[11px] text-gray-400 font-mono">(${groupLinks.length})</span>
-              </div>
+        let gl = links.filter(l => l.group.trim() === group);
+        if (q) gl = gl.filter(l => matchesSearch(l, q));
+        if (!gl.length) return;
+        total += gl.length;
+        html += `
+          <div class="card !p-4 sm:!p-5 hover:border-gray-300 dark:hover:border-slate-600 transition">
+            <div class="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100 dark:border-slate-700/60">
+              <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
+              <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">${escapeHtml(group)}</h3>
+              <span class="text-[11px] text-gray-400 font-mono">(${gl.length})</span>
             </div>
             <div class="flex flex-wrap items-center gap-2.5">
-              ${groupLinks.map(link => `
-                <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="group inline-flex items-center gap-2 px-3.5 py-2 bg-gray-50 dark:bg-slate-700/70 hover:bg-green-50 dark:hover:bg-slate-600/90 border border-gray-200 dark:border-slate-600 hover:border-green-400 dark:hover:border-green-500 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 shadow-sm hover:shadow-sm transition-all transform hover:-translate-y-0.5">
-                  <div class="w-5 h-5 rounded-md overflow-hidden flex items-center justify-center bg-white dark:bg-slate-800 flex-shrink-0 border border-gray-100 dark:border-slate-700 p-0.5">
-                    <img src="${escapeHtml(getFaviconUrl(link))}" alt="" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='https://www.google.com/s2/favicons?domain=google.com&sz=32'">
-                  </div>
+              ${gl.map(link => `
+                <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3.5 py-2 bg-gray-50 dark:bg-slate-700/70 hover:bg-green-50 dark:hover:bg-slate-600/90 border border-gray-200 dark:border-slate-600 hover:border-green-400 dark:hover:border-green-500 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 shadow-sm transition-all hover:-translate-y-0.5">
+                  <span class="w-5 h-5 rounded-md overflow-hidden flex items-center justify-center bg-white dark:bg-slate-800 flex-shrink-0 border border-gray-100 dark:border-slate-700 p-0.5">
+                    <img src="${escapeHtml(getFaviconUrl(link))}" alt="" loading="lazy" class="w-full h-full object-contain" onerror="this.onerror=null;this.src='https://www.google.com/s2/favicons?domain=google.com&sz=32'">
+                  </span>
                   <span class="truncate max-w-[150px] sm:max-w-[180px]">${escapeHtml(link.name)}</span>
-                </a>
-              `).join('')}
+                </a>`).join('')}
             </div>
-          </div>
-        `;
+          </div>`;
       });
 
-      if (totalMatchingLinks === 0) {
+      if (!total) {
         groupedRowsContainer.innerHTML = '';
         dashboardEmptyState.querySelector('h3').textContent = q ? 'لا توجد نتائج مطابقة لبحثك' : 'لا توجد روابط مسجلة بعد';
         dashboardEmptyState.classList.remove('hidden');
       } else {
         dashboardEmptyState.classList.add('hidden');
-        groupedRowsContainer.innerHTML = rowsHtml;
+        groupedRowsContainer.innerHTML = html;
       }
     }
 
     function renderSettings() {
-      const groups = Array.from(new Set(links.map(l => l.group.trim()).filter(Boolean)));
+      const groups = getGroups();
       updateGroupsDatalist();
+      if (currentCategory !== 'all' && !groups.includes(currentCategory)) currentCategory = 'all';
 
-      let tabsHtml = `
-        <button data-cat="all" class="set-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${currentCategory === 'all' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border border-green-300 dark:border-green-800' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'}">
-          الكل (${links.length})
-        </button>
-      `;
-      groups.forEach(group => {
-        const count = links.filter(l => l.group.trim() === group).length;
-        const isActive = currentCategory === group;
-        tabsHtml += `
-          <button data-cat="${escapeHtml(group)}" class="set-cat-btn px-3 py-1.5 rounded-xl text-xs font-medium transition whitespace-nowrap ${isActive ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border border-green-300 dark:border-green-800 font-bold' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'}">
-            ${escapeHtml(group)} (${count})
-          </button>
-        `;
-      });
-      settingsCategoryTabs.innerHTML = tabsHtml;
-      settingsCategoryTabs.querySelectorAll('.set-cat-btn').forEach(btn => {
-        btn.addEventListener('click', () => { currentCategory = btn.getAttribute('data-cat'); renderSettings(); });
-      });
+      settingsCategoryTabs.innerHTML = categoryButtons(groups, 'set-cat-btn', 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border border-green-300 dark:border-green-800', OFF_CAT);
+      settingsCategoryTabs.querySelectorAll('.set-cat-btn').forEach(btn => btn.addEventListener('click', () => { currentCategory = btn.getAttribute('data-cat'); renderSettings(); }));
 
       let filtered = [...links];
       if (currentCategory !== 'all') filtered = filtered.filter(l => l.group.trim() === currentCategory);
-      if (searchQuery.trim() !== '') {
-        const q = searchQuery.toLowerCase().trim();
-        filtered = filtered.filter(l => l.name.toLowerCase().includes(q) || l.url.toLowerCase().includes(q) || l.group.toLowerCase().includes(q));
-      }
+      const q = searchQuery.toLowerCase().trim();
+      if (q) filtered = filtered.filter(l => matchesSearch(l, q));
       filtered.sort((a, b) => sortAscending ? a.name.localeCompare(b.name, 'ar') : b.name.localeCompare(a.name, 'ar'));
 
-      if (filtered.length === 0) {
-        settingsCardsContainer.innerHTML = '';
-        settingsEmptyState.classList.remove('hidden');
-        return;
-      }
+      if (!filtered.length) { settingsCardsContainer.innerHTML = ''; settingsEmptyState.classList.remove('hidden'); return; }
       settingsEmptyState.classList.add('hidden');
 
       settingsCardsContainer.innerHTML = filtered.map(link => `
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-sm transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="card !p-4 hover:shadow transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div class="flex items-center gap-3.5 flex-1 min-w-0">
             <div class="w-11 h-11 rounded-xl bg-gray-50 dark:bg-slate-700 border border-gray-100 dark:border-slate-600 flex items-center justify-center p-2 flex-shrink-0">
-              <img src="${escapeHtml(getFaviconUrl(link))}" alt="" class="w-7 h-7 rounded-md object-contain" onerror="this.onerror=null; this.src='https://www.google.com/s2/favicons?domain=google.com&sz=64';">
+              <img src="${escapeHtml(getFaviconUrl(link))}" alt="" loading="lazy" class="w-7 h-7 rounded-md object-contain" onerror="this.onerror=null;this.src='https://www.google.com/s2/favicons?domain=google.com&sz=64'">
             </div>
             <div class="min-w-0 flex-1">
-              <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="font-bold text-slate-900 dark:text-slate-100 hover:text-green-600 dark:hover:text-green-400 transition truncate block text-sm sm:text-base">
-                ${escapeHtml(link.name)}
-              </a>
-              <div class="text-xs text-gray-400 truncate mt-0.5" dir="ltr" style="text-align: right;">${escapeHtml(link.url)}</div>
+              <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="font-bold text-slate-900 dark:text-slate-100 hover:text-green-600 dark:hover:text-green-400 transition truncate block text-sm sm:text-base">${escapeHtml(link.name)}</a>
+              <div class="text-xs text-gray-400 truncate mt-0.5" dir="ltr" style="text-align:right">${escapeHtml(link.url)}</div>
               <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
                 <span>المجموعة:</span>
                 <span class="text-slate-700 dark:text-slate-300 font-medium bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded-md">${escapeHtml(link.group)}</span>
@@ -691,45 +912,30 @@
             <button class="edit-link-btn px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600 rounded-xl transition" data-id="${escapeHtml(link.id)}">تعديل</button>
             <button class="delete-link-btn px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition" data-id="${escapeHtml(link.id)}">حذف</button>
           </div>
-        </div>
-      `).join('');
+        </div>`).join('');
 
-      settingsCardsContainer.querySelectorAll('.edit-link-btn').forEach(btn => {
-        btn.addEventListener('click', () => openEditForm(btn.getAttribute('data-id')));
-      });
-      settingsCardsContainer.querySelectorAll('.delete-link-btn').forEach(btn => {
-        btn.addEventListener('click', () => promptDelete(btn.getAttribute('data-id')));
-      });
+      settingsCardsContainer.querySelectorAll('.edit-link-btn').forEach(btn => btn.addEventListener('click', () => openEditForm(btn.getAttribute('data-id'))));
+      settingsCardsContainer.querySelectorAll('.delete-link-btn').forEach(btn => btn.addEventListener('click', () => { pendingDeleteId = btn.getAttribute('data-id'); deleteModal.classList.remove('hidden'); }));
     }
 
+    const renderCurrent = () => { if (currentView === 'dashboard') renderDashboard(); else if (currentView === 'settings') renderSettings(); };
+
+    // ===== نموذج الروابط =====
     function openNewForm() {
-      formTitle.textContent = 'رابط جديد';
-      editLinkId.value = '';
-      linkForm.reset();
-      linkFormCard.classList.remove('hidden');
+      closeForm();
       linkFormCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       groupInput.focus();
     }
-
     function openEditForm(id) {
       const link = links.find(l => l.id === id);
       if (!link) return;
       formTitle.textContent = 'تعديل الرابط: ' + link.name;
       editLinkId.value = link.id;
-      groupInput.value = link.group;
-      iconInput.value = link.icon || '';
-      nameInput.value = link.name;
-      urlInput.value = link.url;
-      linkFormCard.classList.remove('hidden');
+      groupInput.value = link.group; iconInput.value = link.icon || ''; nameInput.value = link.name; urlInput.value = link.url;
       linkFormCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       nameInput.focus();
     }
-
-    function closeForm() {
-      linkForm.reset();
-      editLinkId.value = '';
-      formTitle.textContent = 'رابط جديد';
-    }
+    function closeForm() { linkForm.reset(); editLinkId.value = ''; formTitle.textContent = 'رابط جديد'; }
 
     linkForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -738,106 +944,262 @@
       const icon = iconInput.value.trim();
       const name = nameInput.value.trim();
       let url = urlInput.value.trim();
-      if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+      if (!name || !url) return showToast('اكتب الاسم والرابط', '⚠️');
+      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+      try { new URL(url); } catch (x) { return showToast('الرابط غير صالح', '⚠️'); }
+      if (icon && !/^https?:\/\//i.test(icon)) return showToast('الأيقونة يجب أن تكون رابط صورة يبدأ بـ https://', '⚠️');
 
       if (id) {
-        const index = links.findIndex(l => l.id === id);
-        if (index !== -1) {
-          links[index] = { ...links[index], name, url, group, icon };
-          showToast(`تم تعديل رابط «${name}»`);
-        }
+        const i = links.findIndex(l => l.id === id);
+        if (i !== -1) { links[i] = { ...links[i], name, url, group, icon }; showToast(`تم تعديل رابط «${name}»`); }
       } else {
+        if (links.length >= MAX_LINKS) return showToast('وصلت إلى الحد الأقصى لعدد الروابط', '⚠️');
         links.unshift({ id: Date.now().toString(), name, url, group, icon });
         showToast(`تمت إضافة رابط «${name}»`);
       }
       saveUserLinks();
       closeForm();
-      if (currentView === 'dashboard') renderDashboard(); else renderSettings();
+      renderCurrent();
     });
+    $('cancelFormBtn').addEventListener('click', closeForm);
+    $('toggleFormBtn').addEventListener('click', openNewForm);
 
-    cancelFormBtn.addEventListener('click', closeForm);
-    toggleFormBtn.addEventListener('click', openNewForm);
-
-    function promptDelete(id) {
-      pendingDeleteId = id;
-      deleteModal.classList.remove('hidden');
-    }
-
-    cancelDeleteBtn.addEventListener('click', () => { pendingDeleteId = null; deleteModal.classList.add('hidden'); });
-    confirmDeleteBtn.addEventListener('click', () => {
+    $('cancelDeleteBtn').addEventListener('click', () => { pendingDeleteId = null; deleteModal.classList.add('hidden'); });
+    $('confirmDeleteBtn').addEventListener('click', () => {
       if (pendingDeleteId) {
         const item = links.find(l => l.id === pendingDeleteId);
         links = links.filter(l => l.id !== pendingDeleteId);
         saveUserLinks();
-        renderSettings();
-        renderDashboard();
+        renderCurrent();
         showToast(`تم حذف «${item ? item.name : 'الرابط'}»`, '🗑️');
       }
       pendingDeleteId = null;
       deleteModal.classList.add('hidden');
     });
 
-    globalSearchInput.addEventListener('input', (e) => {
+    // البحث (الحاسوب والجوال متزامنان)
+    searchInputs.forEach(inp => inp.addEventListener('input', (e) => {
       searchQuery = e.target.value;
-      if (currentView === 'dashboard') renderDashboard(); else renderSettings();
-    });
+      searchInputs.forEach(o => { if (o !== e.target) o.value = searchQuery; });
+      if (currentView !== 'dashboard' && currentView !== 'settings') switchView('dashboard'); else renderCurrent();
+    }));
 
     window.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && currentEmail) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && currentUser) {
         e.preventDefault();
-        globalSearchInput.focus();
-        globalSearchInput.select();
+        const inp = window.innerWidth >= 768 ? searchInputs[0] : searchInputs[1];
+        inp.focus(); inp.select();
       }
       if (e.key === 'Escape') { pendingDeleteId = null; deleteModal.classList.add('hidden'); }
     });
 
-    sortLinksBtn.addEventListener('click', () => {
+    $('sortLinksBtn').addEventListener('click', () => {
       sortAscending = !sortAscending;
-      sortBtnText.textContent = sortAscending ? 'ترتيب أبجدي (أ - ي)' : 'ترتيب أبجدي (ي - أ)';
+      $('sortBtnText').textContent = sortAscending ? 'ترتيب أبجدي (أ - ي)' : 'ترتيب أبجدي (ي - أ)';
       renderSettings();
     });
 
-    exportDataBtn.addEventListener('click', () => {
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(links, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `mysnaplinks_backup_${new Date().toISOString().slice(0, 10)}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
+    function downloadFile(content, filename, type) {
+      const blob = new Blob([content], { type });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    }
+
+    $('exportDataBtn').addEventListener('click', () => {
+      downloadFile(JSON.stringify(links, null, 2), `mysnaplinks_backup_${new Date().toISOString().slice(0, 10)}.json`, 'application/json');
       showToast('تم تصدير ملف النسخة الاحتياطية بنجاح');
     });
 
-    importFileInput.addEventListener('change', (e) => {
+    $('importFileInput').addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = (ev) => {
         try {
-          const imported = JSON.parse(event.target.result);
-          if (Array.isArray(imported)) {
-            links = imported
-              .filter(l => l && typeof l.url === 'string' && /^https?:\/\//i.test(l.url) && typeof l.name === 'string')
-              .map(l => ({ id: String(l.id || Date.now() + Math.random()), name: l.name, url: l.url, group: String(l.group || 'عام').trim() || 'عام', icon: (typeof l.icon === 'string' && /^(https?:\/\/|[^:]*$)/i.test(l.icon)) ? l.icon : '' }));
-            saveUserLinks();
-            renderSettings();
-            renderDashboard();
-            showToast(`تم استيراد ${links.length} رابط بنجاح!`);
-          } else { showToast('صيغة الملف غير صالحة', '⚠️'); }
+          const clean = sanitizeLinks(JSON.parse(ev.target.result));
+          if (!clean.length) return showToast('لم يُعثر على روابط صالحة في الملف', '⚠️');
+          links = clean;
+          saveUserLinks();
+          renderCurrent();
+          showToast(`تم استيراد ${clean.length} رابط بنجاح!`);
         } catch (err) { showToast('تعذر قراءة ملف JSON', '⚠️'); }
       };
       reader.readAsText(file);
       e.target.value = '';
     });
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    // ===== صفحة حسابي =====
+    function renderAccount() {
+      if (!currentUser || !profile) return;
+      $('accAvatar').textContent = (profile.name || '?').trim().charAt(0).toUpperCase();
+      $('accName').textContent = profile.name;
+      $('accEmail').textContent = currentUser.email;
+      $('accVerified').innerHTML = currentUser.emailVerified
+        ? '<span class="text-[11px] font-bold text-green-700 dark:text-green-400 bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded-md">✅ البريد مؤكَّد</span>'
+        : '<span class="text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded-md">⏳ البريد غير مؤكَّد</span>';
+      $('accCreated').textContent = fmtDate(profile.createdAt);
+      $('accLastLogin').textContent = profile.prevLogin ? fmtDate(profile.prevLogin, true) : 'هذه أول مرة';
+      $('accLinks').textContent = links.length;
+      $('accNameInput').value = profile.name;
     }
 
-    try { if (localStorage.getItem('mysnap_theme') === 'dark') document.documentElement.classList.add('dark'); } catch (e) {}
-    checkActiveSession();
-    initGoogleAuth();
+    $('nameForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget, msg = $('nameMsg');
+      const name = $('accNameInput').value.trim();
+      if (!name) return setMsg(msg, 'اكتب اسماً.');
+      setBusy(form, true);
+      try {
+        await updateProfile(currentUser, { displayName: name });
+        await setDoc(doc(db, 'users', currentUser.uid), { name }, { merge: true });
+        profile.name = name;
+        applyUserToUI(); renderAccount();
+        setMsg(msg, 'تم حفظ الاسم ✅', 'ok');
+      } catch (ex) { setMsg(msg, authErrorMessage(ex.code)); }
+      finally { setBusy(form, false); }
+    });
+
+    $('passForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget, msg = $('passMsg');
+      const cur = $('accCurPass').value, nw = $('accNewPass').value, nw2 = $('accNewPass2').value;
+      if (!cur) return setMsg(msg, 'اكتب كلمة المرور الحالية.');
+      if (nw.length < 6) return setMsg(msg, 'كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل.');
+      if (nw !== nw2) return setMsg(msg, 'كلمتا المرور الجديدتان غير متطابقتين.');
+      if (nw === cur) return setMsg(msg, 'كلمة المرور الجديدة مطابقة للحالية.');
+      setBusy(form, true);
+      try {
+        await reauthenticateWithCredential(currentUser, EmailAuthProvider.credential(currentUser.email, cur));
+        await updatePassword(currentUser, nw);
+        form.reset();
+        setMsg(msg, 'تم تغيير كلمة المرور بنجاح ✅', 'ok');
+      } catch (ex) { setMsg(msg, authErrorMessage(ex.code)); }
+      finally { setBusy(form, false); }
+    });
+
+    $('accResetBtn').addEventListener('click', async () => {
+      try {
+        await sendPasswordResetEmail(auth, currentUser.email);
+        setMsg($('passMsg'), `أرسلنا رابط إعادة التعيين إلى <b dir="ltr">${escapeHtml(currentUser.email)}</b>. تحقق من بريدك (ومن مجلد Spam).`, 'ok');
+      } catch (ex) { setMsg($('passMsg'), authErrorMessage(ex.code)); }
+    });
+
+    let deleteArmed = false, deleteArmTimer = null;
+    $('deleteAccForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget, msg = $('delMsg'), btn = $('deleteAccBtn');
+      const pass = $('accDelPass').value;
+      if (!pass) return setMsg(msg, 'اكتب كلمة المرور للتأكيد.');
+      if (!deleteArmed) {
+        deleteArmed = true; btn.textContent = 'اضغط مجدداً للتأكيد النهائي';
+        clearTimeout(deleteArmTimer);
+        deleteArmTimer = setTimeout(() => { deleteArmed = false; btn.textContent = 'حذف حسابي'; }, 5000);
+        return;
+      }
+      deleteArmed = false; clearTimeout(deleteArmTimer);
+      setBusy(form, true, 'جاري الحذف...');
+      try {
+        const user = currentUser;
+        await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, pass));
+        await deleteDoc(doc(db, 'links', user.uid));
+        await deleteDoc(doc(db, 'users', user.uid));
+        await deleteUser(user);
+        showToast('تم حذف حسابك نهائياً', '🗑️');
+      } catch (ex) { setMsg(msg, authErrorMessage(ex.code)); }
+      finally { setBusy(form, false); btn.textContent = 'حذف حسابي'; }
+    });
+
+    // ===== لوحة الإحصائيات (للمشرف فقط) =====
+    async function loadAdmin() {
+      $('adminStats').innerHTML = '<div class="col-span-full text-center text-xs text-gray-400 py-6">جاري تحميل الإحصائيات...</div>';
+      $('adminChart').innerHTML = ''; $('adminTableBody').innerHTML = '';
+      try {
+        const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
+        adminUsers = snap.docs.map(d => {
+          const x = d.data();
+          return { uid: d.id, name: x.name || '', email: x.email || '', emailVerified: !!x.emailVerified, createdAt: toDate(x.createdAt), lastLoginAt: toDate(x.lastLoginAt), linksCount: Number(x.linksCount) || 0 };
+        });
+        renderAdmin();
+      } catch (ex) {
+        console.error(ex);
+        $('adminStats').innerHTML = `<div class="col-span-full err text-center">${ex.code === 'permission-denied'
+          ? 'ليست لديك صلاحية قراءة المستخدمين. تأكد أن بريدك مضاف في قواعد Firestore وأنه مؤكَّد.'
+          : authErrorMessage(ex.code)}</div>`;
+      }
+    }
+
+    function renderAdmin() {
+      const now = Date.now(), DAY = 86400000;
+      const within = (d, days) => d && (now - d.getTime()) <= days * DAY;
+      const totalLinks = adminUsers.reduce((s, u) => s + u.linksCount, 0);
+      const stats = [
+        ['👥', 'إجمالي المسجّلين', adminUsers.length],
+        ['🆕', 'جدد آخر 7 أيام', adminUsers.filter(u => within(u.createdAt, 7)).length],
+        ['📅', 'جدد آخر 30 يوماً', adminUsers.filter(u => within(u.createdAt, 30)).length],
+        ['🟢', 'نشطون آخر 7 أيام', adminUsers.filter(u => within(u.lastLoginAt, 7)).length],
+        ['🟡', 'نشطون اليوم', adminUsers.filter(u => within(u.lastLoginAt, 1)).length],
+        ['✅', 'بريد مؤكَّد', adminUsers.filter(u => u.emailVerified).length],
+        ['🔗', 'إجمالي الروابط', totalLinks],
+        ['📈', 'متوسط الروابط للمستخدم', adminUsers.length ? (totalLinks / adminUsers.length).toFixed(1) : 0]
+      ];
+      $('adminStats').innerHTML = stats.map(([ic, label, val]) => `
+        <div class="card !p-4">
+          <div class="text-[11px] text-gray-500 dark:text-gray-400">${ic} ${label}</div>
+          <div class="text-2xl font-extrabold mt-1">${val}</div>
+        </div>`).join('');
+
+      // مخطط آخر 14 يوماً
+      const days = [];
+      for (let i = 13; i >= 0; i--) {
+        const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
+        days.push({ d, n: 0 });
+      }
+      adminUsers.forEach(u => {
+        if (!u.createdAt) return;
+        const k = new Date(u.createdAt); k.setHours(0, 0, 0, 0);
+        const slot = days.find(x => x.d.getTime() === k.getTime());
+        if (slot) slot.n++;
+      });
+      const max = Math.max(1, ...days.map(x => x.n));
+      $('adminChart').innerHTML = days.map(x => `
+        <div class="flex-1 flex flex-col items-center justify-end h-full gap-1" title="${fmtDate(x.d)}: ${x.n}">
+          <span class="text-[10px] font-bold text-gray-500">${x.n || ''}</span>
+          <div class="w-full rounded-t-md ${x.n ? 'bg-green-500' : 'bg-gray-200 dark:bg-slate-700'}" style="height:${x.n ? Math.max(6, (x.n / max) * 100) : 3}%"></div>
+          <span class="text-[9px] text-gray-400">${x.d.getDate()}/${x.d.getMonth() + 1}</span>
+        </div>`).join('');
+
+      renderAdminTable();
+    }
+
+    function renderAdminTable() {
+      const q = $('adminSearch').value.toLowerCase().trim();
+      const rows = adminUsers.filter(u => !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+      $('adminTableBody').innerHTML = rows.length ? rows.map((u, i) => `
+        <tr class="border-b border-gray-100 dark:border-slate-700/60 hover:bg-gray-50 dark:hover:bg-slate-700/40">
+          <td class="py-2 px-2 text-gray-400">${i + 1}</td>
+          <td class="py-2 px-2 font-semibold">${escapeHtml(u.name)}</td>
+          <td class="py-2 px-2" dir="ltr" style="text-align:right">${escapeHtml(u.email)}</td>
+          <td class="py-2 px-2">${u.emailVerified ? '✅' : '⏳'}</td>
+          <td class="py-2 px-2 whitespace-nowrap">${fmtDate(u.createdAt)}</td>
+          <td class="py-2 px-2 whitespace-nowrap">${fmtDate(u.lastLoginAt, true)}</td>
+          <td class="py-2 px-2 font-bold">${u.linksCount}</td>
+        </tr>`).join('') : '<tr><td colspan="7" class="text-center text-gray-400 py-6">لا توجد نتائج</td></tr>';
+    }
+
+    $('adminSearch').addEventListener('input', renderAdminTable);
+    $('adminRefreshBtn').addEventListener('click', loadAdmin);
+    $('adminCsvBtn').addEventListener('click', () => {
+      if (!adminUsers.length) return showToast('لا توجد بيانات للتصدير', '⚠️');
+      const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const iso = (d) => d ? d.toISOString().replace('T', ' ').slice(0, 16) : '';
+      const lines = [['الاسم', 'البريد', 'مؤكد', 'تاريخ التسجيل', 'آخر نشاط', 'عدد الروابط'].map(esc).join(',')]
+        .concat(adminUsers.map(u => [u.name, u.email, u.emailVerified ? 'نعم' : 'لا', iso(u.createdAt), iso(u.lastLoginAt), u.linksCount].map(esc).join(',')));
+      downloadFile('﻿' + lines.join('\r\n'), `mysnaplinks_users_${new Date().toISOString().slice(0, 10)}.csv`, 'text/csv;charset=utf-8');
+      showToast('تم تصدير قائمة المستخدمين');
+    });
   </script>
 </body>
 </html>
