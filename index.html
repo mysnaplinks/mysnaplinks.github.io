@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MySnapLinks | ماي سناب لينكس</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Tajawal', 'sans-serif'] },
+          colors: { brand: { green: '#22c55e', greenDark: '#16a34a' } }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Tajawal', sans-serif; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    .dark ::-webkit-scrollbar-thumb { background: #475569; }
+  </style>
+</head>
+<body class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
+
+  <!-- شريط التنقل العلوي -->
+  <header class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6">
+      <div class="flex items-center justify-between h-16 gap-3">
+        
+        <!-- عنوان التطبيق MySnapLinks -->
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center font-bold text-lg shadow-inner">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+            </svg>
+          </div>
+          <h1 class="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+            <span class="text-green-600 dark:text-green-400">MySnap</span><span>Links</span>
+          </h1>
+        </div>
+
+        <!-- شريط البحث السريع -->
+        <div class="flex-1 max-w-md mx-2 relative">
+          <div class="relative flex items-center">
+            <input 
+              type="text" 
+              id="globalSearchInput" 
+              placeholder="ابحث في الروابط، المجموعات... (Ctrl + K)" 
+              class="w-full bg-gray-50 dark:bg-slate-700/70 border border-gray-200 dark:border-slate-600 rounded-xl pr-9 pl-14 py-2 text-xs sm:text-sm text-slate-800 dark:text-slate-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
+            >
+            <div class="absolute right-3 text-gray-400 pointer-events-none">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </div>
+            <kbd class="absolute left-2.5 hidden sm:inline-block bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded px-1.5 py-0.5 text-[10px] text-gray-400 font-mono shadow-xs">Ctrl K</kbd>
+          </div>
+        </div>
+
+        <!-- أزرار الواجهة والوضع الليلي -->
+        <div class="flex items-center gap-2">
+          <button id="viewLinksTabBtn" class="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition bg-green-600 text-white shadow-sm shadow-green-600/20">
+            <svg class="w-4 h-4 fill-current text-amber-300" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/></svg>
+            <span>الروابط</span>
+          </button>
+
+          <button id="viewSettingsTabBtn" class="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium rounded-xl transition bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600">
+            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <span>الإعدادات</span>
+          </button>
+
+          <button id="darkModeToggle" title="الوضع الليلي / النهاري" class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition">
+            <svg id="moonIcon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            <svg id="sunIcon" class="w-4 h-4 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- إشعار الإجراءات -->
+  <div id="toast" class="fixed bottom-5 left-5 bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+    <span id="toastIcon">✓</span>
+    <span id="toastMessage">تم الإجراء بنجاح</span>
+  </div>
+
+  <!-- نافذة تأكيد الحذف -->
+  <div id="deleteModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-200 dark:border-slate-700">
+      <h3 class="font-bold text-slate-900 dark:text-slate-100 text-base mb-2">تأكيد الحذف</h3>
+      <p class="text-xs text-gray-600 dark:text-gray-300 mb-5 leading-relaxed">هل تريد بالتأكيد حذف هذا الرابط؟</p>
+      <div class="flex justify-end gap-2 text-xs">
+        <button id="cancelDeleteBtn" class="px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition">إلغاء</button>
+        <button id="confirmDeleteBtn" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold transition">حذف نهائي</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- المحتوى الرئيسي -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
+
+    <!-- الواجهة 1: عرض الروابط -->
+    <section id="linksDashboardView" class="space-y-6">
+      <div class="flex items-center justify-between gap-3 pb-3 border-b border-gray-200 dark:border-slate-700">
+        <div id="dashboardCategoryBadges" class="flex items-center gap-2 overflow-x-auto pb-1 flex-1"></div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <button id="goToSettingsBtn" class="text-xs font-semibold px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:border-green-500 rounded-xl text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5 shadow-2xs">
+            <span class="text-green-500 font-bold text-sm">+</span>
+            <span>إضافة رابط جديد</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="groupedRowsContainer" class="space-y-4"></div>
+
+      <div id="dashboardEmptyState" class="hidden text-center py-16 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700 p-6">
+        <div class="text-5xl mb-3">🔍</div>
+        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">لم يتم العثور على روابط مطابقة</h3>
+      </div>
+    </section>
+
+    <!-- الواجهة 2: صفحة الإعدادات -->
+    <section id="settingsManageView" class="hidden space-y-6">
+      
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <button id="toggleFormBtn" class="bg-brand-green hover:bg-brand-greenDark text-white px-4 py-2 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5">
+            <span class="text-base font-bold">+</span>
+            <span>رابط جديد</span>
+          </button>
+          <button id="sortLinksBtn" class="bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 px-3.5 py-2 rounded-xl font-medium text-xs sm:text-sm border border-gray-200 dark:border-slate-700 shadow-sm transition flex items-center gap-1.5">
+            <span id="sortBtnText">ترتيب أبجدي</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2 text-xs">
+          <button id="exportDataBtn" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition font-medium">
+            تصدير نسخة (JSON)
+          </button>
+          <label class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition font-medium cursor-pointer">
+            استيراد روابط
+            <input type="file" id="importFileInput" accept=".json" class="hidden">
+          </label>
+        </div>
+      </div>
+
+      <!-- نموذج إضافة / تعديل رابط -->
+      <div id="linkFormCard" class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 border border-gray-200 dark:border-slate-700 shadow-sm transition-all">
+        <div class="flex items-center justify-between mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
+          <h3 id="formTitle" class="text-base font-bold text-slate-900 dark:text-white">رابط جديد</h3>
+          <span class="text-xs text-gray-400">تُحفظ البيانات في متصفحك مباشرة</span>
+        </div>
+
+        <form id="linkForm" class="space-y-4">
+          <input type="hidden" id="editLinkId" value="">
+
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4 items-end">
+            <div class="flex flex-col">
+              <label for="groupInput" class="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-1.5 min-h-[34px] flex items-end">
+                <span>المجموعة <span class="text-[11px] text-gray-400 font-normal">(اختر أو اكتب جديداً)</span></span>
+              </label>
+              <input type="text" id="groupInput" list="existingGroupsList" placeholder="مثال: الذكاء الاصطناعي" required class="w-full h-10 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500">
+              <datalist id="existingGroupsList"></datalist>
+            </div>
+
+            <div class="flex flex-col">
+              <label for="iconInput" class="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-1.5 min-h-[34px] flex items-end">
+                <span>الأيقونة <span class="text-[11px] text-gray-400 font-normal">(شعار تلقائي أو رمز)</span></span>
+              </label>
+              <input type="text" id="iconInput" placeholder="رمز تعبيري (🤖) أو رابط صورة https://" class="w-full h-10 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500">
+            </div>
+
+            <div class="flex flex-col">
+              <label for="nameInput" class="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-1.5 min-h-[34px] flex items-end">
+                <span>الاسم</span>
+              </label>
+              <input type="text" id="nameInput" placeholder="مثال: ChatGPT" required class="w-full h-10 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500">
+            </div>
+
+            <div class="flex flex-col">
+              <label for="urlInput" class="text-xs text-gray-700 dark:text-gray-300 font-semibold mb-1.5 min-h-[34px] flex items-end">
+                <span>الرابط</span>
+              </label>
+              <input type="url" id="urlInput" placeholder="https://..." required class="w-full h-10 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 rounded-xl px-3 py-2 text-xs sm:text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500" dir="ltr">
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" id="cancelFormBtn" class="px-5 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-600 transition">إلغاء</button>
+            <button type="submit" class="px-6 py-2 text-xs font-bold text-white bg-brand-green hover:bg-brand-greenDark rounded-xl shadow-sm transition">حفظ</button>
+          </div>
+        </form>
+      </div>
+
+      <div id="settingsCategoryTabs" class="flex items-center gap-1.5 overflow-x-auto pb-2 text-xs"></div>
+      <div id="settingsCardsContainer" class="space-y-3"></div>
+      <div id="settingsEmptyState" class="hidden text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
+        <p class="text-gray-600 dark:text-gray-300 font-semibold text-sm">لا توجد روابط في هذه القائمة</p>
+      </div>
+    </section>
+
+  </main>
+
+  <script>
+    const INITIAL_LINKS = [
+      { id: '1', name: 'Claude', url: 'https://claude.ai/new', group: 'الذكاء الاصطناعي', icon: 'https://claude.ai/favicon.ico' },
+      { id: '2', name: 'Gemini', url: 'https://gemini.google.com/app', group: 'الذكاء الاصطناعي', icon: 'https://www.gstatic.com/lamda/images/favicon_v1_150160cddff7f294ce30.svg' },
+      { id: '3', name: 'ChatGPT', url: 'https://chatgpt.com', group: 'الذكاء الاصطناعي', icon: 'https://chatgpt.com/favicon.ico' },
+      { id: '4', name: 'DeepSeek', url: 'https://chat.deepseek.com', group: 'الذكاء الاصطناعي', icon: 'https://chat.deepseek.com/favicon.ico' },
+      { id: '5', name: 'Blogger', url: 'https://www.blogger.com', group: 'إدارة المحتوى', icon: 'https://www.blogger.com/favicon.ico' },
+      { id: '6', name: 'Google Drive', url: 'https://drive.google.com', group: 'أدوات العمل', icon: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png' }
+    ];
+
+    let links = [];
+    let currentView = 'dashboard';
+    let currentCategory = 'all';
+    let searchQuery = '';
+    let sortAscending = true;
+    let pendingDeleteId = null;
+
+    const viewLinksTabBtn = document.getElementById('viewLinksTabBtn');
+    const viewSettingsTabBtn = document.getElementById('viewSettingsTabBtn');
+    const linksDashboardView = document.getElementById('linksDashboardView');
+    const settingsManageView = document.getElementById('settingsManageView');
+    const goToSettingsBtn = document.getElementById('goToSettingsBtn');
+    const globalSearchInput = document.getElementById('globalSearchInput');
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    const dashboardCategoryBadges = document.getElementById('dashboardCategoryBadges');
+    const groupedRowsContainer = document.getElementById('groupedRowsContainer');
+    const dashboardEmptyState = document.getElementById('dashboardEmptyState');
+    const linkFormCard = document.getElementById('linkFormCard');
+    const linkForm = document.getElementById('linkForm');
+    const formTitle = document.getElementById('formTitle');
+    const editLinkId = document.getElementById('editLinkId');
+    const groupInput = document.getElementById('groupInput');
+    const iconInput = document.getElementById('iconInput');
+    const nameInput = document.getElementById('nameInput');
+    const urlInput = document.getElementById('urlInput');
+    const existingGroupsList = document.getElementById('existingGroupsList');
+    const toggleFormBtn = document.getElementById('toggleFormBtn');
+    const cancelFormBtn = document.getElementById('cancelFormBtn');
+    const sortLinksBtn = document.getElementById('sortLinksBtn');
+    const sortBtnText = document.getElementById('sortBtnText');
+    const exportDataBtn = document.getElementById('exportDataBtn');
+    const importFileInput = document.getElementById('importFileInput');
+    const settingsCategoryTabs = document.getElementById('settingsCategoryTabs');
+    const settingsCardsContainer = document.getElementById('settingsCardsContainer');
+    const settingsEmptyState = document.getElementById('settingsEmptyState');
+    const deleteModal = document.getElementById('deleteModal');
+    const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    const toastIcon = document.getElementById('toastIcon');
+
+    function loadState() {
+      try {
+        const saved = localStorage.getItem('mysnaplinks_data');
+        links = saved ? JSON.parse(saved) : [...INITIAL_LINKS];
+        if (!saved) saveLinks();
+        const savedTheme = localStorage.getItem('mysnaplinks_theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (e) {
+        links = [...INITIAL_LINKS];
+      }
+    }
+
+    function saveLinks() {
+      try { localStorage.setItem('mysnaplinks_data', JSON.stringify(links)); } catch (e) {}
+    }
+
+    function showToast(message, icon = '✓') {
+      toastMessage.textContent = message;
+      toastIcon.textContent = icon;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 2500);
+    }
+
+    function getFaviconUrl(link) {
+      if (link.icon && link.icon.trim() !== '') return link.icon.trim();
+      try {
+        const domain = new URL(link.url).hostname;
+        return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
+      } catch (e) {
+        return 'https://www.google.com/s2/favicons?domain=google.com&sz=64';
+      }
+    }
+
+    function switchView(view) {
+      currentView = view;
+      if (view === 'dashboard') {
+        linksDashboardView.classList.remove('hidden');
+        settingsManageView.classList.add('hidden');
+        viewLinksTabBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition bg-green-600 text-white shadow-sm shadow-green-600/20';
+        viewSettingsTabBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium rounded-xl transition bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600';
+        renderDashboard();
+      } else {
+        linksDashboardView.classList.add('hidden');
+        settingsManageView.classList.remove('hidden');
+        viewSettingsTabBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition bg-green-600 text-white shadow-sm shadow-green-600/20';
+        viewLinksTabBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium rounded-xl transition bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600';
+        renderSettings();
+      }
+    }
+
+    viewLinksTabBtn.addEventListener('click', () => switchView('dashboard'));
+    viewSettingsTabBtn.addEventListener('click', () => switchView('settings'));
+    goToSettingsBtn.addEventListener('click', () => { switchView('settings'); openNewForm(); });
+
+    darkModeToggle.addEventListener('click', () => {
+      const isDark = document.documentElement.classList.toggle('dark');
+      try { localStorage.setItem('mysnaplinks_theme', isDark ? 'dark' : 'light'); } catch (e) {}
+    });
+
+    function updateGroupsDatalist() {
+      const groups = Array.from(new Set(links.map(l => l.group.trim()).filter(Boolean)));
+      existingGroupsList.innerHTML = groups.map(g => `<option value="${escapeHtml(g)}">`).join('');
+    }
+
+    function renderDashboard() {
+      const groups = Array.from(new Set(links.map(l => l.group.trim()).filter(Boolean)));
+      updateGroupsDatalist();
+
+      let badgesHtml = `
+        <button data-cat="all" class="dash-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${currentCategory === 'all' ? 'bg-green-600 text-white shadow-sm' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'}">
+          الكل (${links.length})
+        </button>
+      `;
+      groups.forEach(group => {
+        const count = links.filter(l => l.group === group).length;
+        const isActive = currentCategory === group;
+        badgesHtml += `
+          <button data-cat="${escapeHtml(group)}" class="dash-cat-btn px-3 py-1.5 rounded-xl text-xs font-medium transition whitespace-nowrap ${isActive ? 'bg-green-600 text-white shadow-sm font-bold' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'}">
+            ${escapeHtml(group)} (${count})
+          </button>
+        `;
+      });
+      dashboardCategoryBadges.innerHTML = badgesHtml;
+      dashboardCategoryBadges.querySelectorAll('.dash-cat-btn').forEach(btn => {
+        btn.addEventListener('click', () => { currentCategory = btn.getAttribute('data-cat'); renderDashboard(); });
+      });
+
+      let activeGroups = currentCategory !== 'all' ? [currentCategory] : groups;
+      const q = searchQuery.toLowerCase().trim();
+      let totalMatchingLinks = 0;
+      let rowsHtml = '';
+
+      activeGroups.forEach(group => {
+        let groupLinks = links.filter(l => l.group === group);
+        if (q) {
+          groupLinks = groupLinks.filter(l => l.name.toLowerCase().includes(q) || l.url.toLowerCase().includes(q) || l.group.toLowerCase().includes(q));
+        }
+        if (groupLinks.length === 0) return;
+        totalMatchingLinks += groupLinks.length;
+
+        rowsHtml += `
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-slate-700 shadow-xs hover:border-gray-300 dark:hover:border-slate-600 transition">
+            <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100 dark:border-slate-700/60">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
+                <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">${escapeHtml(group)}</h3>
+                <span class="text-[11px] text-gray-400 font-mono">(${groupLinks.length})</span>
+              </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2.5">
+              ${groupLinks.map(link => `
+                <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="group inline-flex items-center gap-2 px-3.5 py-2 bg-gray-50 dark:bg-slate-700/70 hover:bg-green-50 dark:hover:bg-slate-600/90 border border-gray-200 dark:border-slate-600 hover:border-green-400 dark:hover:border-green-500 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 shadow-xs hover:shadow-sm transition-all transform hover:-translate-y-0.5">
+                  <div class="w-5 h-5 rounded-md overflow-hidden flex items-center justify-center bg-white dark:bg-slate-800 flex-shrink-0 border border-gray-100 dark:border-slate-700 p-0.5">
+                    <img src="${getFaviconUrl(link)}" alt="" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='https://www.google.com/s2/favicons?domain=google.com&sz=32'">
+                  </div>
+                  <span class="truncate max-w-[150px] sm:max-w-[180px]">${escapeHtml(link.name)}</span>
+                </a>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      });
+
+      if (totalMatchingLinks === 0) {
+        groupedRowsContainer.innerHTML = '';
+        dashboardEmptyState.classList.remove('hidden');
+      } else {
+        dashboardEmptyState.classList.add('hidden');
+        groupedRowsContainer.innerHTML = rowsHtml;
+      }
+    }
+
+    function renderSettings() {
+      const groups = Array.from(new Set(links.map(l => l.group.trim()).filter(Boolean)));
+      updateGroupsDatalist();
+
+      let tabsHtml = `
+        <button data-cat="all" class="set-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${currentCategory === 'all' ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border border-green-300 dark:border-green-800' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'}">
+          الكل (${links.length})
+        </button>
+      `;
+      groups.forEach(group => {
+        const count = links.filter(l => l.group === group).length;
+        const isActive = currentCategory === group;
+        tabsHtml += `
+          <button data-cat="${escapeHtml(group)}" class="set-cat-btn px-3 py-1.5 rounded-xl text-xs font-medium transition whitespace-nowrap ${isActive ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border border-green-300 dark:border-green-800 font-bold' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'}">
+            ${escapeHtml(group)} (${count})
+          </button>
+        `;
+      });
+      settingsCategoryTabs.innerHTML = tabsHtml;
+      settingsCategoryTabs.querySelectorAll('.set-cat-btn').forEach(btn => {
+        btn.addEventListener('click', () => { currentCategory = btn.getAttribute('data-cat'); renderSettings(); });
+      });
+
+      let filtered = [...links];
+      if (currentCategory !== 'all') filtered = filtered.filter(l => l.group === currentCategory);
+      if (searchQuery.trim() !== '') {
+        const q = searchQuery.toLowerCase().trim();
+        filtered = filtered.filter(l => l.name.toLowerCase().includes(q) || l.url.toLowerCase().includes(q) || l.group.toLowerCase().includes(q));
+      }
+      filtered.sort((a, b) => sortAscending ? a.name.localeCompare(b.name, 'ar') : b.name.localeCompare(a.name, 'ar'));
+
+      if (filtered.length === 0) {
+        settingsCardsContainer.innerHTML = '';
+        settingsEmptyState.classList.remove('hidden');
+        return;
+      }
+      settingsEmptyState.classList.add('hidden');
+
+      settingsCardsContainer.innerHTML = filtered.map(link => `
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-gray-200 dark:border-slate-700 shadow-xs hover:shadow-sm transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-3.5 flex-1 min-w-0">
+            <div class="w-11 h-11 rounded-xl bg-gray-50 dark:bg-slate-700 border border-gray-100 dark:border-slate-600 flex items-center justify-center p-2 flex-shrink-0">
+              <img src="${getFaviconUrl(link)}" alt="" class="w-7 h-7 rounded-md object-contain" onerror="this.onerror=null; this.src='https://www.google.com/s2/favicons?domain=google.com&sz=64';">
+            </div>
+            <div class="min-w-0 flex-1">
+              <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="font-bold text-slate-900 dark:text-slate-100 hover:text-green-600 dark:hover:text-green-400 transition truncate block text-sm sm:text-base">
+                ${escapeHtml(link.name)}
+              </a>
+              <div class="text-xs text-gray-400 truncate mt-0.5" dir="ltr" style="text-align: right;">${escapeHtml(link.url)}</div>
+              <div class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+                <span>المجموعة:</span>
+                <span class="text-slate-700 dark:text-slate-300 font-medium bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded-md">${escapeHtml(link.group)}</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-slate-700/50">
+            <button class="edit-link-btn px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600 rounded-xl transition" data-id="${link.id}">تعديل</button>
+            <button class="delete-link-btn px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition" data-id="${link.id}">حذف</button>
+          </div>
+        </div>
+      `).join('');
+
+      settingsCardsContainer.querySelectorAll('.edit-link-btn').forEach(btn => {
+        btn.addEventListener('click', () => openEditForm(btn.getAttribute('data-id')));
+      });
+      settingsCardsContainer.querySelectorAll('.delete-link-btn').forEach(btn => {
+        btn.addEventListener('click', () => promptDelete(btn.getAttribute('data-id')));
+      });
+    }
+
+    function openNewForm() {
+      formTitle.textContent = 'رابط جديد';
+      editLinkId.value = '';
+      linkForm.reset();
+      linkFormCard.classList.remove('hidden');
+      linkFormCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      groupInput.focus();
+    }
+
+    function openEditForm(id) {
+      const link = links.find(l => l.id === id);
+      if (!link) return;
+      formTitle.textContent = 'تعديل الرابط: ' + link.name;
+      editLinkId.value = link.id;
+      groupInput.value = link.group;
+      iconInput.value = link.icon || '';
+      nameInput.value = link.name;
+      urlInput.value = link.url;
+      linkFormCard.classList.remove('hidden');
+      linkFormCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      nameInput.focus();
+    }
+
+    function closeForm() {
+      linkForm.reset();
+      editLinkId.value = '';
+      formTitle.textContent = 'رابط جديد';
+    }
+
+    linkForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const id = editLinkId.value;
+      const group = groupInput.value.trim() || 'عام';
+      const icon = iconInput.value.trim();
+      const name = nameInput.value.trim();
+      let url = urlInput.value.trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://')) url = 'https://' + url;
+
+      if (id) {
+        const index = links.findIndex(l => l.id === id);
+        if (index !== -1) {
+          links[index] = { ...links[index], name, url, group, icon };
+          showToast(`تم تعديل رابط «${name}»`);
+        }
+      } else {
+        links.unshift({ id: Date.now().toString(), name, url, group, icon });
+        showToast(`تمت إضافة رابط «${name}»`);
+      }
+      saveLinks();
+      closeForm();
+      if (currentView === 'dashboard') renderDashboard(); else renderSettings();
+    });
+
+    cancelFormBtn.addEventListener('click', closeForm);
+    toggleFormBtn.addEventListener('click', openNewForm);
+
+    function promptDelete(id) {
+      pendingDeleteId = id;
+      deleteModal.classList.remove('hidden');
+    }
+
+    cancelDeleteBtn.addEventListener('click', () => { pendingDeleteId = null; deleteModal.classList.add('hidden'); });
+    confirmDeleteBtn.addEventListener('click', () => {
+      if (pendingDeleteId) {
+        const item = links.find(l => l.id === pendingDeleteId);
+        links = links.filter(l => l.id !== pendingDeleteId);
+        saveLinks();
+        renderSettings();
+        renderDashboard();
+        showToast(`تم حذف «${item ? item.name : 'الرابط'}»`, '🗑️');
+      }
+      pendingDeleteId = null;
+      deleteModal.classList.add('hidden');
+    });
+
+    globalSearchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value;
+      if (currentView === 'dashboard') renderDashboard(); else renderSettings();
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        globalSearchInput.focus();
+        globalSearchInput.select();
+      }
+      if (e.key === 'Escape') deleteModal.classList.add('hidden');
+    });
+
+    sortLinksBtn.addEventListener('click', () => {
+      sortAscending = !sortAscending;
+      sortBtnText.textContent = sortAscending ? 'ترتيب أبجدي (أ - ي)' : 'ترتيب أبجدي (ي - أ)';
+      renderSettings();
+    });
+
+    exportDataBtn.addEventListener('click', () => {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(links, null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `mysnaplinks_backup_${new Date().toISOString().slice(0, 10)}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('تم تصدير ملف النسخة الاحتياطية بنجاح');
+    });
+
+    importFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const imported = JSON.parse(event.target.result);
+          if (Array.isArray(imported)) {
+            links = imported;
+            saveLinks();
+            renderSettings();
+            renderDashboard();
+            showToast(`تم استيراد ${imported.length} رابط بنجاح!`);
+          } else { showToast('صيغة الملف غير صالحة', '⚠️'); }
+        } catch (err) { showToast('تعذر قراءة ملف JSON', '⚠️'); }
+      };
+      reader.readAsText(file);
+    });
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, ''');
+    }
+
+    loadState();
+    switchView('dashboard');
+  </script>
+</body>
+</html>
