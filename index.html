@@ -272,6 +272,41 @@
     </div>
   </div>
 
+  <!-- نافذة عرض الملاحظة -->
+  <div id="noteModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-slate-700">
+      <div class="flex items-center gap-2 mb-1">
+        <span class="text-xl">📝</span>
+        <h3 id="noteModalTitle" class="font-bold text-slate-900 dark:text-slate-100 text-base truncate"></h3>
+      </div>
+      <a id="noteModalUrl" href="#" target="_blank" rel="noopener noreferrer" class="block text-[11px] text-green-700 dark:text-green-400 truncate mb-3 hover:underline" dir="ltr" style="text-align:right"></a>
+      <div id="noteModalText" class="text-sm text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-wrap break-words bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-xl p-3 mb-5"></div>
+      <div class="flex justify-end gap-2 text-xs">
+        <button id="noteCloseBtn" class="px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition">إغلاق</button>
+        <button id="noteEditBtn" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition">✏️ تعديل الرابط</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- نافذة رمز QR -->
+  <div id="qrModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-5 shadow-2xl border border-gray-200 dark:border-slate-700 text-center">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="font-bold text-slate-900 dark:text-slate-100 text-base">رمز QR للرابط</h3>
+        <button id="qrCloseX" class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xl leading-none" aria-label="إغلاق">×</button>
+      </div>
+      <div class="bg-gray-100 dark:bg-slate-900 rounded-xl p-3 flex items-center justify-center min-h-[200px]">
+        <canvas id="qrCanvas" class="w-full max-w-[260px] h-auto rounded-lg shadow-sm"></canvas>
+        <div id="qrStatus" class="hidden text-xs text-gray-500"></div>
+      </div>
+      <div id="qrUrl" class="text-[11px] text-gray-500 dark:text-gray-400 mt-2 break-all" dir="ltr"></div>
+      <div class="grid grid-cols-2 gap-2 mt-4 text-xs">
+        <button id="qrDownloadBtn" class="py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold transition">⬇️ تنزيل الصورة</button>
+        <button id="qrCopyBtn" class="py-2.5 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-200 rounded-xl font-bold hover:bg-gray-100 dark:hover:bg-slate-700 transition">📋 نسخ الرابط</button>
+      </div>
+    </div>
+  </div>
+
   <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
 
     <!-- تنبيه تأكيد البريد -->
@@ -306,7 +341,7 @@
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div class="flex items-center gap-2">
           <button id="toggleFormBtn" class="bg-brand-green hover:bg-brand-greenDark text-white px-4 py-2 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition flex items-center gap-1.5"><span class="text-base font-bold">+</span><span>رابط جديد</span></button>
-          <button id="sortLinksBtn" class="bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 px-3.5 py-2 rounded-xl font-medium text-xs sm:text-sm border border-gray-200 dark:border-slate-700 shadow-sm transition"><span id="sortBtnText">ترتيب أبجدي (أ - ي)</span></button>
+          <button id="sortLinksBtn" class="bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 text-gray-700 dark:text-gray-200 px-3.5 py-2 rounded-xl font-medium text-xs sm:text-sm border border-gray-200 dark:border-slate-700 shadow-sm transition"><span id="sortBtnText">↕️ الترتيب: يدوي</span></button>
         </div>
         <div class="flex items-center gap-2 text-xs">
           <button id="exportDataBtn" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-lg transition font-medium">تصدير نسخة (JSON)</button>
@@ -342,6 +377,11 @@
               <input type="text" id="urlInput" placeholder="https://..." required class="inp" dir="ltr">
             </div>
           </div>
+          <div>
+            <label for="noteInput" class="lbl">📝 ملاحظة <span class="text-[11px] text-gray-400 font-normal">(اختياري — 300 حرف كحد أقصى، تراها أنت فقط)</span></label>
+            <textarea id="noteInput" rows="2" maxlength="300" class="inp" placeholder="مثال: حساب العمل، كلمة البحث المفضلة، موعد التجديد..."></textarea>
+            <div class="text-[10px] text-gray-400 mt-1 text-left" dir="ltr"><span id="noteCount">0</span>/300</div>
+          </div>
           <div class="flex justify-end gap-2 pt-2">
             <button type="button" id="cancelFormBtn" class="px-5 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-600 transition">إلغاء</button>
             <button type="submit" class="px-6 py-2 text-xs font-bold text-white bg-brand-green hover:bg-brand-greenDark rounded-xl shadow-sm transition">حفظ الرابط</button>
@@ -350,6 +390,7 @@
       </div>
 
       <div id="settingsCategoryTabs" class="flex items-center gap-1.5 overflow-x-auto pb-2 text-xs"></div>
+      <p class="text-[11px] text-gray-400 -mt-3">↕️ استخدم الأسهم ▲▼ بجانب كل رابط لتغيير ترتيبه داخل مجموعته (في وضع «الترتيب: يدوي» ودون بحث). ولترتيب المجموعات نفسها، اضغط «↕️ ترتيب» في الصفحة الرئيسية.</p>
       <div id="settingsCardsContainer" class="space-y-3"></div>
       <div id="settingsEmptyState" class="hidden text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
         <p class="text-gray-600 dark:text-gray-300 font-semibold text-sm">لا توجد روابط في هذه القائمة</p>
@@ -564,7 +605,8 @@
     let currentView = 'dashboard';
     let currentCategory = 'all';
     let searchQuery = '';
-    let sortAscending = true;
+    let sortMode = 'custom';     // 'custom' (ترتيبك اليدوي) | 'az' | 'za'
+    let reorderGroup = null;     // المجموعة المفتوحة للترتيب في الصفحة الرئيسية
     let pendingDeleteId = null;
     let pendingRegisterName = null;
     let welcomeMode = null; // 'new' | 'login' | null
@@ -577,7 +619,9 @@
     const dashboardCategoryBadges = $('dashboardCategoryBadges');
     const settingsCategoryTabs = $('settingsCategoryTabs'), settingsCardsContainer = $('settingsCardsContainer'), settingsEmptyState = $('settingsEmptyState');
     const linkFormCard = $('linkFormCard'), linkForm = $('linkForm'), formTitle = $('formTitle'), editLinkId = $('editLinkId');
-    const groupInput = $('groupInput'), iconInput = $('iconInput'), nameInput = $('nameInput'), urlInput = $('urlInput');
+    const groupInput = $('groupInput'), iconInput = $('iconInput'), nameInput = $('nameInput'), urlInput = $('urlInput'), noteInput = $('noteInput');
+    const NOTE_MAX = 300;
+    const LINKS_DOC_LIMIT = 900 * 1024; // حد أمان تحت حد Firestore (1 ميغابايت للمستند)
     const deleteModal = $('deleteModal');
     const searchInputs = [$('globalSearchInput'), $('mobileSearchInput')];
     const VIEWS = { dashboard: $('linksDashboardView'), settings: $('settingsManageView'), account: $('accountView'), admin: $('adminView') };
@@ -637,7 +681,8 @@
           name: l.name.trim().slice(0, 80),
           url: l.url.trim(),
           group: (String(l.group || '').trim() || 'عام').slice(0, 60),
-          icon: (typeof l.icon === 'string' && /^https?:\/\//i.test(l.icon.trim())) ? l.icon.trim() : ''
+          icon: (typeof l.icon === 'string' && /^https?:\/\//i.test(l.icon.trim())) ? l.icon.trim() : '',
+          note: typeof l.note === 'string' ? l.note.trim().slice(0, NOTE_MAX) : ''
         }));
     }
 
@@ -912,7 +957,7 @@
 
     function resetState() {
       currentUser = null; profile = null; links = []; adminUsers = []; userRole = 'user'; staffMap = {};
-      currentCategory = 'all'; searchQuery = ''; pendingDeleteId = null;
+      currentCategory = 'all'; searchQuery = ''; pendingDeleteId = null; reorderGroup = null;
       searchInputs.forEach(i => i.value = '');
       [groupedRowsContainer, settingsCardsContainer, dashboardCategoryBadges, settingsCategoryTabs, $('adminTableBody'), $('adminStats'), $('adminChart')].forEach(el => el.innerHTML = '');
       activeEmailLabel.textContent = '';
@@ -988,7 +1033,7 @@
 
     // ===== عرض الروابط =====
     const getGroups = () => Array.from(new Set(links.map(l => (l.group || '').trim()).filter(Boolean)));
-    const matchesSearch = (l, q) => l.name.toLowerCase().includes(q) || l.url.toLowerCase().includes(q) || l.group.toLowerCase().includes(q);
+    const matchesSearch = (l, q) => l.name.toLowerCase().includes(q) || l.url.toLowerCase().includes(q) || l.group.toLowerCase().includes(q) || String(l.note || '').toLowerCase().includes(q);
 
     function updateGroupsDatalist() {
       $('existingGroupsList').innerHTML = getGroups().map(g => `<option value="${escapeHtml(g)}">`).join('');
@@ -1027,15 +1072,29 @@
               <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
               <h3 class="font-bold text-sm text-slate-800 dark:text-slate-100">${escapeHtml(group)}</h3>
               <span class="text-[11px] text-gray-400 font-mono">(${gl.length})</span>
+              <span class="mr-auto flex items-center gap-1.5">
+                ${reorderGroup === group ? `
+                  <span class="text-[11px] text-gray-500 hidden sm:inline">ترتيب المجموعة:</span>
+                  <button type="button" class="mv-group w-7 h-7 rounded-lg text-xs bg-gray-100 dark:bg-slate-700 hover:bg-green-100 dark:hover:bg-slate-600 disabled:opacity-30" data-group="${escapeHtml(group)}" data-dir="-1" title="نقل المجموعة للأعلى" ${groups.indexOf(group) === 0 ? 'disabled' : ''}>▲</button>
+                  <button type="button" class="mv-group w-7 h-7 rounded-lg text-xs bg-gray-100 dark:bg-slate-700 hover:bg-green-100 dark:hover:bg-slate-600 disabled:opacity-30" data-group="${escapeHtml(group)}" data-dir="1" title="نقل المجموعة للأسفل" ${groups.indexOf(group) === groups.length - 1 ? 'disabled' : ''}>▼</button>
+                  <button type="button" class="reorder-done px-3 py-1 rounded-lg text-[11px] font-bold bg-green-600 hover:bg-green-700 text-white">✓ تم</button>`
+                : (q ? '' : `<button type="button" class="reorder-btn px-2.5 py-1 rounded-lg text-[11px] font-bold text-gray-500 hover:text-green-700 dark:hover:text-green-400 bg-gray-50 dark:bg-slate-700/60 border border-gray-200 dark:border-slate-600 hover:border-green-400 transition" data-group="${escapeHtml(group)}" title="ترتيب الروابط وتعديلها">↕️ ترتيب</button>`)}
+              </span>
             </div>
-            <div class="flex flex-wrap items-center gap-2.5">
+            ${reorderGroup === group ? reorderRows(gl) : ''}
+            <div class="flex flex-wrap items-center gap-2.5 ${reorderGroup === group ? 'hidden' : ''}">
               ${gl.map(link => `
-                <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-3.5 py-2 bg-gray-50 dark:bg-slate-700/70 hover:bg-green-50 dark:hover:bg-slate-600/90 border border-gray-200 dark:border-slate-600 hover:border-green-400 dark:hover:border-green-500 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 shadow-sm transition-all hover:-translate-y-0.5">
-                  <span class="w-5 h-5 rounded-md overflow-hidden flex items-center justify-center bg-white dark:bg-slate-800 flex-shrink-0 border border-gray-100 dark:border-slate-700 p-0.5">
-                    <img src="${escapeHtml(getFaviconUrl(link))}" alt="" loading="lazy" class="w-full h-full object-contain" onerror="this.onerror=null;this.src='https://www.google.com/s2/favicons?domain=google.com&sz=32'">
-                  </span>
-                  <span class="truncate max-w-[150px] sm:max-w-[180px]">${escapeHtml(link.name)}</span>
-                </a>`).join('')}
+                <div class="group/chip inline-flex items-stretch bg-gray-50 dark:bg-slate-700/70 border border-gray-200 dark:border-slate-600 hover:border-green-400 dark:hover:border-green-500 rounded-xl shadow-sm transition-all hover:-translate-y-0.5 overflow-hidden">
+                  <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" ${link.note ? `title="📝 ${escapeHtml(link.note)}"` : ''} class="inline-flex items-center gap-2 pr-3.5 pl-2 py-2 hover:bg-green-50 dark:hover:bg-slate-600/90 text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 transition">
+                    <span class="w-5 h-5 rounded-md overflow-hidden flex items-center justify-center bg-white dark:bg-slate-800 flex-shrink-0 border border-gray-100 dark:border-slate-700 p-0.5">
+                      <img src="${escapeHtml(getFaviconUrl(link))}" alt="" loading="lazy" class="w-full h-full object-contain" onerror="this.onerror=null;this.src='https://www.google.com/s2/favicons?domain=google.com&sz=32'">
+                    </span>
+                    <span class="truncate max-w-[150px] sm:max-w-[180px]">${escapeHtml(link.name)}</span>
+                  </a>
+                  ${link.note ? `<button type="button" class="note-chip-btn px-1.5 text-sm hover:bg-amber-50 dark:hover:bg-amber-950/40 transition" data-id="${escapeHtml(link.id)}" title="عرض الملاحظة" aria-label="عرض الملاحظة">📝</button>` : ''}
+                  <button type="button" class="qr-chip-btn px-1.5 text-[10px] font-black tracking-tight text-gray-400 hover:text-slate-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-600 border-r border-gray-200 dark:border-slate-600 transition sm:opacity-40 sm:group-hover/chip:opacity-100" data-id="${escapeHtml(link.id)}" title="عرض رمز QR" aria-label="عرض رمز QR">QR</button>
+                  <button type="button" class="edit-chip-btn px-2 text-[13px] text-gray-400 hover:text-green-600 hover:bg-green-50 dark:hover:bg-slate-600 border-r border-gray-200 dark:border-slate-600 transition sm:opacity-40 sm:group-hover/chip:opacity-100" data-id="${escapeHtml(link.id)}" title="تعديل الرابط" aria-label="تعديل الرابط">✏️</button>
+                </div>`).join('')}
             </div>
           </div>`;
       });
@@ -1062,7 +1121,8 @@
       if (currentCategory !== 'all') filtered = filtered.filter(l => l.group.trim() === currentCategory);
       const q = searchQuery.toLowerCase().trim();
       if (q) filtered = filtered.filter(l => matchesSearch(l, q));
-      filtered.sort((a, b) => sortAscending ? a.name.localeCompare(b.name, 'ar') : b.name.localeCompare(a.name, 'ar'));
+      if (sortMode !== 'custom') filtered.sort((a, b) => sortMode === 'az' ? a.name.localeCompare(b.name, 'ar') : b.name.localeCompare(a.name, 'ar'));
+      const canMove = sortMode === 'custom' && !q;
 
       if (!filtered.length) { settingsCardsContainer.innerHTML = ''; settingsEmptyState.classList.remove('hidden'); return; }
       settingsEmptyState.classList.add('hidden');
@@ -1080,17 +1140,209 @@
                 <span>المجموعة:</span>
                 <span class="text-slate-700 dark:text-slate-300 font-medium bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded-md">${escapeHtml(link.group)}</span>
               </div>
+              ${link.note ? `<div class="text-xs text-gray-700 dark:text-gray-200 mt-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg px-2.5 py-1.5 whitespace-pre-wrap break-words">📝 ${escapeHtml(link.note)}</div>` : ''}
             </div>
           </div>
           <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-slate-700/50">
-            <button class="edit-link-btn px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600 rounded-xl transition" data-id="${escapeHtml(link.id)}">تعديل</button>
+            ${canMove ? moveButtons(link) : ''}
+            <button class="qr-link-btn px-3 py-1.5 text-xs font-black text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600 rounded-xl transition" data-id="${escapeHtml(link.id)}" title="عرض رمز QR">QR</button>
+            <button class="edit-link-btn px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600 rounded-xl transition" data-id="${escapeHtml(link.id)}">✏️ تعديل</button>
             <button class="delete-link-btn px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition" data-id="${escapeHtml(link.id)}">حذف</button>
           </div>
         </div>`).join('');
 
+      settingsCardsContainer.querySelectorAll('.qr-link-btn').forEach(btn => btn.addEventListener('click', () => openQrModal(btn.dataset.id)));
+      settingsCardsContainer.querySelectorAll('.mv-link').forEach(btn => btn.addEventListener('click', () => moveLink(btn.dataset.id, Number(btn.dataset.dir))));
       settingsCardsContainer.querySelectorAll('.edit-link-btn').forEach(btn => btn.addEventListener('click', () => openEditForm(btn.getAttribute('data-id'))));
       settingsCardsContainer.querySelectorAll('.delete-link-btn').forEach(btn => btn.addEventListener('click', () => { pendingDeleteId = btn.getAttribute('data-id'); deleteModal.classList.remove('hidden'); }));
     }
+
+    // أزرار ✏️ و📝 على روابط الصفحة الرئيسية
+    let noteModalId = null;
+    function openNoteModal(id) {
+      const link = links.find(l => l.id === id);
+      if (!link) return;
+      noteModalId = id;
+      $('noteModalTitle').textContent = link.name;
+      $('noteModalUrl').textContent = link.url; $('noteModalUrl').href = link.url;
+      $('noteModalText').textContent = link.note || '';
+      $('noteModal').classList.remove('hidden');
+    }
+    function closeNoteModal() { noteModalId = null; $('noteModal').classList.add('hidden'); }
+    function editFromDashboard(id) { switchView('settings'); openEditForm(id); }
+    groupedRowsContainer.addEventListener('click', (e) => {
+      const ed = e.target.closest('.edit-chip-btn'), nt = e.target.closest('.note-chip-btn');
+      const ro = e.target.closest('.reorder-btn'), dn = e.target.closest('.reorder-done');
+      const ml = e.target.closest('.mv-link'), mg = e.target.closest('.mv-group');
+      const qr = e.target.closest('.qr-chip-btn');
+      if (qr) { e.preventDefault(); openQrModal(qr.dataset.id); }
+      else if (ed) { e.preventDefault(); editFromDashboard(ed.dataset.id); }
+      else if (nt) { e.preventDefault(); openNoteModal(nt.dataset.id); }
+      else if (ro) { reorderGroup = ro.dataset.group; renderDashboard(); }
+      else if (dn) { reorderGroup = null; renderDashboard(); showToast('تم حفظ الترتيب'); }
+      else if (ml) { moveLink(ml.dataset.id, Number(ml.dataset.dir)); }
+      else if (mg) { moveGroup(mg.dataset.group, Number(mg.dataset.dir)); reorderGroup = mg.dataset.group; renderDashboard(); }
+    });
+    $('noteCloseBtn').addEventListener('click', closeNoteModal);
+    $('noteEditBtn').addEventListener('click', () => { const id = noteModalId; closeNoteModal(); if (id) editFromDashboard(id); });
+    $('noteModal').addEventListener('click', (e) => { if (e.target === $('noteModal')) closeNoteModal(); });
+
+    // ===== ترتيب الروابط والمجموعات (الترتيب هو ترتيب المصفوفة نفسها، ويُحفظ في Firestore) =====
+    function groupNeighbors(link) {
+      const g = link.group.trim();
+      const same = links.filter(l => l.group.trim() === g);
+      const k = same.findIndex(l => l.id === link.id);
+      return { first: k === 0, last: k === same.length - 1 };
+    }
+    function moveButtons(link) {
+      const n = groupNeighbors(link);
+      const cls = 'mv-link w-7 h-7 rounded-lg text-xs bg-gray-100 dark:bg-slate-700 hover:bg-green-100 dark:hover:bg-slate-600 disabled:opacity-30 transition';
+      return `<button type="button" class="${cls}" data-id="${escapeHtml(link.id)}" data-dir="-1" title="نقل للأعلى" ${n.first ? 'disabled' : ''}>▲</button><button type="button" class="${cls}" data-id="${escapeHtml(link.id)}" data-dir="1" title="نقل للأسفل" ${n.last ? 'disabled' : ''}>▼</button>`;
+    }
+    function reorderRows(gl) {
+      return `<div class="space-y-1.5 mb-1">${gl.map((link, i) => `
+        <div class="flex items-center gap-2 bg-gray-50 dark:bg-slate-700/50 border border-gray-200 dark:border-slate-600 rounded-xl px-2.5 py-1.5">
+          <span class="text-[11px] text-gray-400 font-mono w-5 text-center">${i + 1}</span>
+          ${moveButtons(link)}
+          <img src="${escapeHtml(getFaviconUrl(link))}" alt="" class="w-5 h-5 rounded object-contain" onerror="this.onerror=null;this.src='https://www.google.com/s2/favicons?domain=google.com&sz=32'">
+          <div class="min-w-0 flex-1">
+            <div class="text-xs sm:text-sm font-semibold truncate">${escapeHtml(link.name)}</div>
+            ${link.note ? `<div class="text-[11px] text-amber-700 dark:text-amber-400 truncate">📝 ${escapeHtml(link.note)}</div>` : ''}
+          </div>
+          ${link.note ? `<button type="button" class="note-chip-btn px-1.5 text-sm" data-id="${escapeHtml(link.id)}" title="عرض الملاحظة">📝</button>` : ''}
+          <button type="button" class="qr-chip-btn px-2 py-1 rounded-lg text-[11px] font-black bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 hover:border-slate-500" data-id="${escapeHtml(link.id)}" title="عرض رمز QR">QR</button>
+          <button type="button" class="edit-chip-btn px-2 py-1 rounded-lg text-[11px] font-bold bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 hover:border-green-500" data-id="${escapeHtml(link.id)}">✏️ تعديل</button>
+        </div>`).join('')}</div>`;
+    }
+    function moveLink(id, dir) {
+      const i = links.findIndex(l => l.id === id);
+      if (i < 0) return;
+      const g = links[i].group.trim();
+      let j = i + dir;
+      while (j >= 0 && j < links.length && links[j].group.trim() !== g) j += dir;
+      if (j < 0 || j >= links.length) return;
+      const arr = [...links];
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      links = arr;
+      saveUserLinks();   // الحفظ مؤجَّل نصف ثانية، فالنقرات المتتالية تُحفظ بكتابة واحدة
+      renderCurrent();
+    }
+    function moveGroup(group, dir) {
+      const groups = getGroups();
+      const i = groups.indexOf(group), j = i + dir;
+      if (i < 0 || j < 0 || j >= groups.length) return;
+      [groups[i], groups[j]] = [groups[j], groups[i]];
+      links = groups.flatMap(g => links.filter(l => l.group.trim() === g));
+      saveUserLinks();
+    }
+
+    // ===== رمز QR لكل رابط (مع شعار Syria24.News دائماً) =====
+    const QR_LIB_URL = 'https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js';
+    let qrLibPromise = null, qrLink = null;
+    function loadQrLib() {
+      if (window.qrcode) return Promise.resolve();
+      if (!qrLibPromise) qrLibPromise = new Promise((res, rej) => {
+        const sc = document.createElement('script');
+        sc.src = QR_LIB_URL; sc.async = true;
+        sc.onload = () => res();
+        sc.onerror = () => { qrLibPromise = null; rej(new Error('qr-lib')); };
+        document.head.appendChild(sc);
+      });
+      return qrLibPromise;
+    }
+    const readableUrl = (u) => { try { return decodeURI(u); } catch (e) { return u; } };
+    function roundRectPath(c, x, y, w, h, rad) {
+      c.beginPath();
+      c.moveTo(x + rad, y); c.arcTo(x + w, y, x + w, y + h, rad); c.arcTo(x + w, y + h, x, y + h, rad);
+      c.arcTo(x, y + h, x, y, rad); c.arcTo(x, y, x + w, y, rad); c.closePath();
+    }
+    function fitText(c, text, maxW) {
+      let t = String(text || '');
+      if (c.measureText(t).width <= maxW) return t;
+      while (t.length > 1 && c.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+      return t + '…';
+    }
+    // يرسم بطاقة QR كاملة: اسم الرابط + الرمز + علامة 24 في الوسط + شعار Syria24.News + الرابط
+    function drawQrCard(canvas, link) {
+      const W = 1000, H = 1260, QR = 800;
+      canvas.width = W; canvas.height = H;
+      const c = canvas.getContext('2d');
+      const DARK = '#0f172a', GREEN = '#16a34a', FONT = 'Tajawal, Inter, Arial, sans-serif';
+
+      c.fillStyle = '#ffffff'; roundRectPath(c, 0, 0, W, H, 56); c.fill();
+      c.fillStyle = GREEN; c.fillRect(0, 0, W, 14);
+
+      // اسم الرابط
+      c.fillStyle = DARK; c.textAlign = 'center'; c.textBaseline = 'middle'; c.direction = 'rtl';
+      c.font = `800 54px ${FONT}`;
+      c.fillText(fitText(c, link.name, W - 120), W / 2, 100);
+
+      // الرمز (تصحيح أخطاء عالٍ H ليتحمّل علامة الوسط)
+      qrcode.stringToBytes = qrcode.stringToBytesFuncs['UTF-8'];
+      const qr = qrcode(0, 'H');
+      qr.addData(link.url); qr.make();
+      const n = qr.getModuleCount(), x0 = (W - QR) / 2, y0 = 170, cell = QR / n;
+      c.fillStyle = DARK;
+      for (let row = 0; row < n; row++) for (let col = 0; col < n; col++) {
+        if (!qr.isDark(row, col)) continue;
+        const px = Math.round(x0 + col * cell), py = Math.round(y0 + row * cell);
+        c.fillRect(px, py, Math.round(x0 + (col + 1) * cell) - px, Math.round(y0 + (row + 1) * cell) - py);
+      }
+
+      // علامة 24 في الوسط
+      const m = QR * 0.19, mx = W / 2 - m / 2, my = y0 + QR / 2 - m / 2;
+      c.fillStyle = '#ffffff'; roundRectPath(c, mx - 10, my - 10, m + 20, m + 20, 26); c.fill();
+      c.fillStyle = GREEN; roundRectPath(c, mx, my, m, m, 20); c.fill();
+      c.fillStyle = '#ffffff'; c.direction = 'ltr'; c.font = `900 ${Math.round(m * 0.5)}px ${FONT}`;
+      c.fillText('24', W / 2, my + m / 2 + 4);
+
+      // الشعار: Syria24.News (24 بالأخضر)
+      const parts = [['Syria', DARK], ['24', GREEN], ['.News', DARK]];
+      c.font = `900 76px ${FONT}`; c.textAlign = 'left';
+      const total = parts.reduce((sum, p) => sum + c.measureText(p[0]).width, 0);
+      let x = (W - total) / 2; const yb = y0 + QR + 95;
+      parts.forEach(([t, col]) => { c.fillStyle = col; c.fillText(t, x, yb); x += c.measureText(t).width; });
+
+      // الرابط بخط صغير
+      c.textAlign = 'center'; c.fillStyle = '#64748b'; c.font = `500 30px ${FONT}`;
+      c.direction = 'ltr';
+      c.fillText(fitText(c, readableUrl(link.url).replace(/^https?:\/\//, ''), W - 120), W / 2, yb + 85);
+    }
+
+    async function openQrModal(id) {
+      const link = links.find(l => l.id === id);
+      if (!link) return;
+      qrLink = link;
+      $('qrUrl').textContent = readableUrl(link.url);
+      $('qrCanvas').classList.add('hidden');
+      $('qrStatus').textContent = 'جاري إنشاء الرمز...'; $('qrStatus').classList.remove('hidden');
+      $('qrModal').classList.remove('hidden');
+      try {
+        await loadQrLib();
+        try { await document.fonts.ready; } catch (e) {}
+        if (qrLink !== link) return;
+        drawQrCard($('qrCanvas'), link);
+        $('qrStatus').classList.add('hidden'); $('qrCanvas').classList.remove('hidden');
+      } catch (e) {
+        $('qrStatus').textContent = 'تعذر إنشاء الرمز. تحقق من الاتصال بالإنترنت وحاول مجدداً.';
+      }
+    }
+    function closeQrModal() { qrLink = null; $('qrModal').classList.add('hidden'); }
+    $('qrCloseX').addEventListener('click', closeQrModal);
+    $('qrModal').addEventListener('click', (e) => { if (e.target === $('qrModal')) closeQrModal(); });
+    $('qrDownloadBtn').addEventListener('click', () => {
+      if (!qrLink || $('qrCanvas').classList.contains('hidden')) return;
+      const a = document.createElement('a');
+      a.href = $('qrCanvas').toDataURL('image/png');
+      a.download = `QR-${qrLink.name.replace(/[\\/:*?"<>|\s]+/g, '-').slice(0, 40)}.png`;
+      document.body.appendChild(a); a.click(); a.remove();
+      showToast('تم تنزيل صورة رمز QR');
+    });
+    $('qrCopyBtn').addEventListener('click', async () => {
+      if (!qrLink) return;
+      try { await navigator.clipboard.writeText(qrLink.url); showToast('تم نسخ الرابط 📋'); }
+      catch (e) { showToast('تعذر النسخ، انسخه يدوياً من تحت الرمز', '⚠️'); }
+    });
 
     const renderCurrent = () => { if (currentView === 'dashboard') renderDashboard(); else if (currentView === 'settings') renderSettings(); };
 
@@ -1106,10 +1358,15 @@
       formTitle.textContent = 'تعديل الرابط: ' + link.name;
       editLinkId.value = link.id;
       groupInput.value = link.group; iconInput.value = link.icon || ''; nameInput.value = link.name; urlInput.value = link.url;
+      noteInput.value = link.note || ''; updateNoteCount();
       linkFormCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       nameInput.focus();
     }
-    function closeForm() { linkForm.reset(); editLinkId.value = ''; formTitle.textContent = 'رابط جديد'; }
+    function closeForm() { linkForm.reset(); editLinkId.value = ''; formTitle.textContent = 'رابط جديد'; updateNoteCount(); }
+    function updateNoteCount() { $('noteCount').textContent = noteInput.value.length; }
+    noteInput.addEventListener('input', updateNoteCount);
+    // يمنع تجاوز حجم مستند Firestore (1 ميغابايت)
+    function linksTooBig(arr) { try { return new Blob([JSON.stringify(arr)]).size > LINKS_DOC_LIMIT; } catch (e) { return false; } }
 
     linkForm.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -1117,20 +1374,23 @@
       const group = groupInput.value.trim() || 'عام';
       const icon = iconInput.value.trim();
       const name = nameInput.value.trim();
+      const note = noteInput.value.trim().slice(0, NOTE_MAX);
       let url = urlInput.value.trim();
       if (!name || !url) return showToast('اكتب الاسم والرابط', '⚠️');
       if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
       try { new URL(url); } catch (x) { return showToast('الرابط غير صالح', '⚠️'); }
       if (icon && !/^https?:\/\//i.test(icon)) return showToast('الأيقونة يجب أن تكون رابط صورة يبدأ بـ https://', '⚠️');
 
+      let next;
       if (id) {
-        const i = links.findIndex(l => l.id === id);
-        if (i !== -1) { links[i] = { ...links[i], name, url, group, icon }; showToast(`تم تعديل رابط «${name}»`); }
+        next = links.map(l => l.id === id ? { ...l, name, url, group, icon, note } : l);
       } else {
         if (links.length >= MAX_LINKS) return showToast('وصلت إلى الحد الأقصى لعدد الروابط', '⚠️');
-        links.unshift({ id: Date.now().toString(), name, url, group, icon });
-        showToast(`تمت إضافة رابط «${name}»`);
+        next = [{ id: Date.now().toString(), name, url, group, icon, note }, ...links];
       }
+      if (linksTooBig(next)) return showToast('امتلأت مساحة حسابك. اختصر بعض الملاحظات أو احذف روابط غير مستخدمة.', '⚠️');
+      links = next;
+      showToast(id ? `تم تعديل رابط «${name}»` : `تمت إضافة رابط «${name}»`);
       saveUserLinks();
       closeForm();
       renderCurrent();
@@ -1164,12 +1424,12 @@
         const inp = window.innerWidth >= 768 ? searchInputs[0] : searchInputs[1];
         inp.focus(); inp.select();
       }
-      if (e.key === 'Escape') { pendingDeleteId = null; deleteModal.classList.add('hidden'); }
+      if (e.key === 'Escape') { pendingDeleteId = null; deleteModal.classList.add('hidden'); closeNoteModal(); closeQrModal(); }
     });
 
     $('sortLinksBtn').addEventListener('click', () => {
-      sortAscending = !sortAscending;
-      $('sortBtnText').textContent = sortAscending ? 'ترتيب أبجدي (أ - ي)' : 'ترتيب أبجدي (ي - أ)';
+      sortMode = { custom: 'az', az: 'za', za: 'custom' }[sortMode];
+      $('sortBtnText').textContent = { custom: '↕️ الترتيب: يدوي', az: 'الترتيب: أبجدي (أ - ي)', za: 'الترتيب: أبجدي (ي - أ)' }[sortMode];
       renderSettings();
     });
 
@@ -1195,6 +1455,7 @@
         try {
           const clean = sanitizeLinks(JSON.parse(ev.target.result));
           if (!clean.length) return showToast('لم يُعثر على روابط صالحة في الملف', '⚠️');
+          if (linksTooBig(clean)) return showToast('الملف كبير جداً على مساحة الحساب. اختصر الملاحظات أو قلّل الروابط.', '⚠️');
           links = clean;
           saveUserLinks();
           renderCurrent();
