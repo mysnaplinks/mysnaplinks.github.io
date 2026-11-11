@@ -144,7 +144,7 @@
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-5">ثوانٍ قليلة وتبدأ بتنظيم روابطك</p>
         <form id="registerForm" class="space-y-3.5 text-right" novalidate>
           <div>
-            <label class="lbl" for="regName">الاسم:</label>
+            <label class="lbl" for="regName">الاسم: <span class="text-[11px] text-rose-500 font-normal">(لا يمكن تغييره لاحقاً)</span></label>
             <input type="text" id="regName" placeholder="اسمك" autocomplete="name" class="inp" maxlength="60">
           </div>
           <div>
@@ -158,6 +158,14 @@
           <div>
             <label class="lbl" for="regPass2">تأكيد كلمة المرور:</label>
             <input type="password" id="regPass2" placeholder="••••••" autocomplete="new-password" class="inp" dir="ltr">
+          </div>
+          <div class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-300 rounded-xl px-3 py-2.5 text-[11px] leading-relaxed">
+            <b>⚠️ قبل إنشاء الحساب:</b>
+            <ul class="list-disc pr-4 mt-1 space-y-0.5">
+              <li><b>الاسم لا يمكن تغييره</b> بعد إنشاء الحساب، فاكتبه بشكل صحيح.</li>
+              <li><b>كلمة المرور لا يمكن تغييرها</b> من داخل التطبيق، فاحفظها جيداً. إن نسيتها تستعيدها عبر بريدك فقط.</li>
+            </ul>
+            <label class="flex items-center gap-2 mt-2 font-bold cursor-pointer"><input type="checkbox" id="regAgree" class="w-4 h-4 accent-green-600"> قرأت التنبيه وفهمته</label>
           </div>
           <div id="registerError" class="hidden err"></div>
           <button type="submit" class="btn-primary">إنشاء الحساب</button>
@@ -268,6 +276,8 @@
 
     <!-- الواجهة 1: الروابط -->
     <section id="linksDashboardView" class="space-y-6">
+      <!-- المساحة الإعلانية (يديرها المشرف) -->
+      <div id="adSlot" class="hidden"></div>
       <div class="flex items-center justify-between gap-3 pb-3 border-b border-gray-200 dark:border-slate-700">
         <div id="dashboardCategoryBadges" class="flex items-center gap-2 overflow-x-auto pb-1 flex-1"></div>
         <button id="goToSettingsBtn" class="flex-shrink-0 text-xs font-semibold px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:border-green-500 rounded-xl text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5 shadow-sm">
@@ -355,27 +365,9 @@
         </div>
       </div>
 
-      <div class="grid md:grid-cols-2 gap-5">
-        <div class="card">
-          <h3 class="font-bold text-sm mb-3">✏️ تعديل الاسم</h3>
-          <form id="nameForm" class="space-y-3" novalidate>
-            <input type="text" id="accNameInput" class="inp" maxlength="60" placeholder="اسمك">
-            <div id="nameMsg" class="hidden"></div>
-            <button type="submit" class="btn-primary">حفظ الاسم</button>
-          </form>
-        </div>
-
-        <div class="card">
-          <h3 class="font-bold text-sm mb-3">🔒 تغيير كلمة المرور</h3>
-          <form id="passForm" class="space-y-3" novalidate>
-            <input type="password" id="accCurPass" class="inp" placeholder="كلمة المرور الحالية" autocomplete="current-password" dir="ltr">
-            <input type="password" id="accNewPass" class="inp" placeholder="كلمة المرور الجديدة (6 أحرف على الأقل)" autocomplete="new-password" dir="ltr">
-            <input type="password" id="accNewPass2" class="inp" placeholder="تأكيد كلمة المرور الجديدة" autocomplete="new-password" dir="ltr">
-            <div id="passMsg" class="hidden"></div>
-            <button type="submit" class="btn-primary">تغيير كلمة المرور</button>
-          </form>
-          <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-3">نسيت كلمتك الحالية؟ <button type="button" id="accResetBtn" class="text-green-600 dark:text-green-400 font-bold hover:underline">أرسل رابط إعادة التعيين إلى بريدي</button></p>
-        </div>
+      <div class="card">
+        <h3 class="font-bold text-sm mb-2">🔒 الاسم وكلمة المرور</h3>
+        <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">الاسم وكلمة المرور ثابتان ولا يمكن تغييرهما من داخل التطبيق، حفاظاً على أمان الحساب. إن نسيت كلمة المرور، سجّل الخروج واضغط «نسيت كلمة المرور؟» في شاشة الدخول، لتصلك رسالة الاستعادة على بريدك.</p>
       </div>
 
       <div class="card">
@@ -396,13 +388,59 @@
 
     <!-- الواجهة 4: إحصائيات المشرف -->
     <section id="adminView" class="hidden space-y-5">
+      <!-- إدارة المساحة الإعلانية (حتى 4 إعلانات تتناوب) -->
+      <div class="card sm:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
+          <h2 class="text-lg font-extrabold">📢 المساحة الإعلانية <span class="text-xs font-medium text-gray-400">(حتى 4 إعلانات تتناوب)</span></h2>
+          <label class="flex items-center gap-2 text-sm font-bold cursor-pointer"><input type="checkbox" id="adEnabled" class="w-4 h-4 accent-green-600"> تشغيل المساحة الإعلانية</label>
+        </div>
+        <div id="adTabs" class="flex flex-wrap items-center gap-2 mb-4"></div>
+        <form id="adForm" class="grid md:grid-cols-2 gap-4" novalidate>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-2 text-sm font-bold cursor-pointer"><input type="checkbox" id="adOn" class="w-4 h-4 accent-green-600"> تفعيل هذا الإعلان</label>
+              <button type="button" id="adClearBtn" class="text-[11px] text-rose-600 dark:text-rose-400 font-semibold hover:underline">🗑️ مسح هذا الإعلان</button>
+            </div>
+            <div>
+              <label class="lbl" for="adTitle">عنوان الإعلان <span class="text-[11px] text-gray-400 font-normal">(80 حرفاً كحد أقصى)</span></label>
+              <input type="text" id="adTitle" class="inp" maxlength="80" placeholder="Syria24.News | سوريا 24">
+            </div>
+            <div>
+              <label class="lbl" for="adText">نص الإعلان <span class="text-[11px] text-gray-400 font-normal">(200 حرف كحد أقصى)</span></label>
+              <textarea id="adText" class="inp" rows="3" maxlength="200" placeholder="آخر الأخبار السورية والعربية والعالمية لحظة بلحظة"></textarea>
+            </div>
+            <div>
+              <label class="lbl" for="adUrl">رابط الإعلان <span class="text-[11px] text-gray-400 font-normal">(ينتقل إليه المستخدم عند الضغط)</span></label>
+              <input type="text" id="adUrl" class="inp" dir="ltr" placeholder="https://syria24.news">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="lbl" for="adButton">نص الزر</label>
+                <input type="text" id="adButton" class="inp" maxlength="30" placeholder="زيارة الموقع">
+              </div>
+              <div>
+                <label class="lbl" for="adImage">صورة/شعار <span class="text-[11px] text-gray-400 font-normal">(اختياري)</span></label>
+                <input type="text" id="adImage" class="inp" dir="ltr" placeholder="https://...png">
+              </div>
+            </div>
+            <div id="adMsg" class="hidden"></div>
+            <button type="submit" class="btn-primary">حفظ ونشر كل الإعلانات</button>
+          </div>
+          <div>
+            <div class="lbl">معاينة الإعلان المحدد:</div>
+            <div id="adPreview" class="mt-1"></div>
+            <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">يظهر للمستخدم إعلان عشوائي عند فتح التطبيق، ثم تتناوب الإعلانات المفعّلة تلقائياً كل 7 ثوانٍ (ويتوقف التناوب عند مرور الفأرة). الضغط على أي جزء من الإعلان يفتح رابطه في تبويب جديد. يصل التعديل إلى المستخدمين خلال 6 ساعات كحد أقصى، حفاظاً على الحصة.</p>
+          </div>
+        </form>
+      </div>
+
       <div class="flex flex-wrap items-center justify-between gap-3">
         <h2 class="text-lg font-extrabold">📊 إحصائيات المستخدمين</h2>
         <div class="flex items-center gap-2 text-xs">
-          <button id="adminRefreshBtn" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-slate-700">🔄 تحديث</button>
           <button id="adminCsvBtn" class="px-3 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-slate-700">⬇️ تصدير Excel (CSV)</button>
         </div>
       </div>
+      <div id="adminStatus" class="hidden text-xs bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-gray-600 dark:text-gray-300"></div>
       <div id="adminStats" class="grid grid-cols-2 md:grid-cols-4 gap-3"></div>
       <div class="card">
         <h3 class="font-bold text-sm mb-4">التسجيلات الجديدة في آخر 14 يوماً</h3>
@@ -560,7 +598,11 @@
         }));
     }
 
+    const QUOTA_MSG = 'تم بلوغ الحد اليومي المسموح به لهذه العملية. يرجى المعاودة غداً.';
+    const isQuotaError = (code) => code === 'resource-exhausted' || code === 'auth/quota-exceeded';
+
     function authErrorMessage(code, ctx = '') {
+      if (isQuotaError(code)) return QUOTA_MSG;
       switch (code) {
         case 'auth/invalid-credential':
         case 'auth/wrong-password':
@@ -637,6 +679,7 @@
       if (!isValidEmail(email)) return setMsg(err, 'اكتب بريداً إلكترونياً صحيحاً.');
       if (pass.length < 6) return setMsg(err, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.');
       if (pass !== pass2) return setMsg(err, 'كلمتا المرور غير متطابقتين.');
+      if (!$('regAgree').checked) return setMsg(err, 'يرجى تأكيد قراءة التنبيه قبل إنشاء الحساب.');
       setMsg(err, ''); setBusy(form, true, 'جاري إنشاء الحساب...');
       try {
         pendingRegisterName = name; welcomeMode = 'new';
@@ -674,7 +717,7 @@
             await loadUserData(user);
           } catch (ex) {
             console.error(ex);
-            showToast('تعذر تحميل بياناتك من السحابة', '⚠️');
+            showToast(isQuotaError(ex.code) ? QUOTA_MSG : 'تعذر تحميل بياناتك من السحابة', '⚠️');
             if (!profile) profile = { name: user.displayName || user.email.split('@')[0], email: user.email, linksCount: links.length };
           }
           applyUserToUI();
@@ -685,6 +728,7 @@
           else if (welcomeMode === 'login') showToast(`أهلاً بعودتك يا ${profile.name}`);
           welcomeMode = null; pendingRegisterName = null;
           switchView('dashboard');
+          loadAd();
         } else {
           resetState();
           loadingScreen.classList.add('hidden');
@@ -729,7 +773,16 @@
       } else {
         const d = usnap.data();
         profile = { name: d.name || user.displayName || user.email.split('@')[0], email: user.email, linksCount: links.length, createdAt: toDate(d.createdAt), prevLogin: toDate(d.lastLoginAt) };
-        await setDoc(uref, { email: user.email, emailVerified: user.emailVerified, linksCount: links.length, lastLoginAt: serverTimestamp() }, { merge: true });
+        // توفير الحصة: يُسجَّل "آخر نشاط" مرة واحدة يومياً فقط (أو عند تغيّر بيانات فعلية)
+        const last = toDate(d.lastLoginAt);
+        const needWrite = !last
+          || istanbulNow(last).date !== istanbulNow().date
+          || d.emailVerified !== user.emailVerified
+          || d.email !== user.email
+          || Number(d.linksCount) !== links.length;
+        if (needWrite) {
+          await setDoc(uref, { email: user.email, emailVerified: user.emailVerified, linksCount: links.length, lastLoginAt: serverTimestamp() }, { merge: true });
+        }
       }
     }
 
@@ -751,7 +804,7 @@
           console.error(ex);
           $('syncDot').className = 'w-2 h-2 rounded-full bg-rose-500 inline-block';
           $('syncDot').title = 'فشل الحفظ';
-          showToast('تعذر الحفظ في السحابة، تحقق من الاتصال', '⚠️');
+          showToast(isQuotaError(ex.code) ? 'لم يُحفظ التعديل: ' + QUOTA_MSG : 'تعذر الحفظ في السحابة، تحقق من الاتصال', '⚠️');
         }
       }, 500);
     }
@@ -775,8 +828,9 @@
       activeEmailLabel.textContent = '';
       $('adminTabBtn').classList.add('hidden');
       $('verifyBanner').classList.add('hidden');
-      ['nameForm', 'passForm', 'deleteAccForm'].forEach(id => $(id).reset());
-      ['nameMsg', 'passMsg', 'delMsg'].forEach(id => setMsg($(id), ''));
+      stopAdRotation(); $('adSlot').innerHTML = ''; $('adSlot').classList.add('hidden');
+      $('deleteAccForm').reset();
+      setMsg($('delMsg'), '');
       closeForm();
     }
 
@@ -789,7 +843,7 @@
     // تأكيد البريد
     $('resendVerifyBtn').addEventListener('click', async () => {
       try { await sendEmailVerification(currentUser); showToast('أُرسلت رسالة التأكيد إلى بريدك 📧'); }
-      catch (ex) { showToast(ex.code === 'auth/too-many-requests' ? 'انتظر قليلاً قبل إعادة الإرسال' : 'تعذر الإرسال', '⚠️'); }
+      catch (ex) { showToast(isQuotaError(ex.code) ? QUOTA_MSG : ex.code === 'auth/too-many-requests' ? 'انتظر قليلاً قبل إعادة الإرسال' : 'تعذر الإرسال', '⚠️'); }
     });
     $('checkVerifyBtn').addEventListener('click', async () => {
       try {
@@ -821,7 +875,7 @@
       if (view === 'dashboard') renderDashboard();
       else if (view === 'settings') renderSettings();
       else if (view === 'account') renderAccount();
-      else if (view === 'admin') loadAdmin();
+      else if (view === 'admin') { loadAdmin(); loadAdForm(); }
     }
     document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchView(btn.dataset.view)));
     $('goToSettingsBtn').addEventListener('click', () => { switchView('settings'); openNewForm(); });
@@ -1050,6 +1104,178 @@
       e.target.value = '';
     });
 
+    // ===== المساحة الإعلانية (حتى 4 إعلانات: بداية عشوائية + تناوب تلقائي) =====
+    // تُحفظ كلها في مستند واحد: public/ad → { enabled, ads: [...] }
+    // كل جهاز يجلبها مرة كل 6 ساعات فقط (قراءة واحدة مهما كان عدد الإعلانات).
+    const AD_CACHE_KEY = 'mysnap_ad_cache_v2';
+    const AD_CACHE_MS = 6 * 60 * 60 * 1000;
+    const AD_MAX = 4;
+    const AD_ROTATE_MS = 7000;
+    const safeHttpUrl = (u) => { try { const x = new URL(String(u || '').trim()); return /^https?:$/.test(x.protocol) ? x.href : ''; } catch (e) { return ''; } };
+    const emptyAd = () => ({ on: false, title: '', text: '', url: '', image: '', button: '' });
+    const cleanAd = (a) => ({ on: a.on !== false, title: String(a.title || '').slice(0, 80), text: String(a.text || '').slice(0, 200), url: String(a.url || ''), image: String(a.image || ''), button: String(a.button || '').slice(0, 30) });
+
+    // يحوّل محتوى المستند (بما فيه الصيغة القديمة ذات الإعلان الواحد) إلى { enabled, ads }
+    function normalizeAdDoc(d) {
+      if (!d) return { enabled: false, ads: [] };
+      if (Array.isArray(d.ads)) return { enabled: d.enabled !== false, ads: d.ads.slice(0, AD_MAX).map(cleanAd) };
+      if (d.title) return { enabled: !!d.enabled, ads: [cleanAd({ ...d, on: true })] };
+      return { enabled: false, ads: [] };
+    }
+    const isShowableAd = (a) => a && a.on && a.title && safeHttpUrl(a.url);
+
+    function adHtml(ad) {
+      const url = safeHttpUrl(ad.url);
+      if (!url || !ad.title) return '';
+      const img = safeHttpUrl(ad.image);
+      let host = ''; try { host = new URL(url).hostname.replace(/^www\./, ''); } catch (e) {}
+      return `
+        <a href="${escapeHtml(url)}" target="_blank" rel="noopener sponsored" class="group block relative overflow-hidden rounded-2xl border border-green-200 dark:border-green-900 bg-gradient-to-l from-green-50 via-white to-white dark:from-green-950/50 dark:via-slate-800 dark:to-slate-800 p-4 sm:p-5 shadow-sm hover:shadow-md hover:border-green-400 dark:hover:border-green-600 transition">
+          <span class="absolute top-2 left-3 text-[10px] font-bold text-gray-400 tracking-wide">إعلان</span>
+          <div class="flex items-center gap-4">
+            ${img ? `<img src="${escapeHtml(img)}" alt="" class="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-contain bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-700 p-1.5 flex-shrink-0" onerror="this.remove()">` : `<div class="w-14 h-14 rounded-xl bg-green-500/10 text-2xl flex items-center justify-center flex-shrink-0">📢</div>`}
+            <div class="min-w-0 flex-1">
+              <div class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white group-hover:text-green-700 dark:group-hover:text-green-400 transition">${escapeHtml(ad.title)}</div>
+              ${ad.text ? `<div class="text-xs text-gray-600 dark:text-gray-300 mt-1 leading-relaxed">${escapeHtml(ad.text)}</div>` : ''}
+              <div class="text-[11px] text-green-700 dark:text-green-400 mt-1 font-semibold" dir="ltr" style="text-align:right">${escapeHtml(host)} ↗</div>
+            </div>
+            <span class="hidden sm:inline-flex flex-shrink-0 px-4 py-2 rounded-xl bg-green-600 group-hover:bg-green-700 text-white text-xs font-bold shadow-sm transition">${escapeHtml(ad.button || 'زيارة الموقع')}</span>
+          </div>
+        </a>`;
+    }
+
+    // ----- العرض للمستخدمين -----
+    let adList = [], adIdx = 0, adTimer = null;
+    function stopAdRotation() { clearInterval(adTimer); adTimer = null; }
+    function startAdRotation() {
+      stopAdRotation();
+      if (adList.length > 1) adTimer = setInterval(() => { adIdx = (adIdx + 1) % adList.length; drawAd(); }, AD_ROTATE_MS);
+    }
+    function drawAd() {
+      const slot = $('adSlot');
+      const dots = adList.length > 1
+        ? `<div class="flex justify-center gap-1.5 mt-2">${adList.map((_, i) => `<button type="button" data-ad="${i}" aria-label="إعلان ${i + 1}" class="ad-dot h-1.5 rounded-full transition-all ${i === adIdx ? 'w-5 bg-green-600' : 'w-1.5 bg-gray-300 dark:bg-slate-600 hover:bg-gray-400'}"></button>`).join('')}</div>`
+        : '';
+      slot.innerHTML = `<div class="ad-fade transition-opacity duration-300 opacity-0">${adHtml(adList[adIdx])}</div>${dots}`;
+      requestAnimationFrame(() => { const f = slot.querySelector('.ad-fade'); if (f) f.classList.remove('opacity-0'); });
+      slot.querySelectorAll('.ad-dot').forEach(b => b.addEventListener('click', () => { adIdx = Number(b.dataset.ad); drawAd(); startAdRotation(); }));
+    }
+    function renderAdSlot(data) {
+      const slot = $('adSlot');
+      stopAdRotation();
+      const n = normalizeAdDoc(data);
+      adList = n.enabled ? n.ads.filter(isShowableAd) : [];
+      if (!adList.length) { slot.innerHTML = ''; slot.classList.add('hidden'); return; }
+      adIdx = Math.floor(Math.random() * adList.length); // بداية عشوائية
+      slot.classList.remove('hidden');
+      drawAd();
+      startAdRotation();
+    }
+    $('adSlot').addEventListener('mouseenter', stopAdRotation);
+    $('adSlot').addEventListener('mouseleave', () => { if (adList.length > 1 && !adTimer) startAdRotation(); });
+
+    async function loadAd(force = false) {
+      let cache = null;
+      try { cache = JSON.parse(localStorage.getItem(AD_CACHE_KEY) || 'null'); } catch (e) {}
+      if (!force && cache && (Date.now() - cache.t) < AD_CACHE_MS) { renderAdSlot(cache.ad); return cache.ad; }
+      try {
+        const snap = await getDoc(doc(db, 'public', 'ad'));
+        const data = normalizeAdDoc(snap.exists() ? snap.data() : null);
+        try { localStorage.setItem(AD_CACHE_KEY, JSON.stringify({ t: Date.now(), ad: data })); } catch (e) {}
+        renderAdSlot(data);
+        return data;
+      } catch (ex) {
+        renderAdSlot(cache ? cache.ad : null); // عند الخطأ أو انتهاء الحصة: اعرض آخر نسخة محفوظة
+        return cache ? cache.ad : null;
+      }
+    }
+
+    // ----- محرر المشرف -----
+    let adminAds = [], adSel = 0;
+    const AD_FIELDS = ['adTitle', 'adText', 'adUrl', 'adImage', 'adButton'];
+
+    function readAdFields() {
+      adminAds[adSel] = {
+        on: $('adOn').checked,
+        title: $('adTitle').value.trim().slice(0, 80),
+        text: $('adText').value.trim().slice(0, 200),
+        url: $('adUrl').value.trim(),
+        image: $('adImage').value.trim(),
+        button: $('adButton').value.trim().slice(0, 30)
+      };
+    }
+    function fillAdFields() {
+      const a = adminAds[adSel];
+      $('adOn').checked = !!a.on;
+      $('adTitle').value = a.title; $('adText').value = a.text; $('adUrl').value = a.url;
+      $('adImage').value = a.image; $('adButton').value = a.button;
+      setMsg($('adMsg'), '');
+      updateAdPreview();
+    }
+    function renderAdTabs() {
+      $('adTabs').innerHTML = adminAds.map((a, i) => {
+        const state = !a.title ? '＋' : (a.on ? '🟢' : '⚪');
+        const cls = i === adSel ? 'bg-green-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600';
+        return `<button type="button" data-i="${i}" class="ad-tab px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${cls}">إعلان ${i + 1} <span class="mr-1">${state}</span></button>`;
+      }).join('');
+      $('adTabs').querySelectorAll('.ad-tab').forEach(b => b.addEventListener('click', () => {
+        readAdFields(); adSel = Number(b.dataset.i); renderAdTabs(); fillAdFields();
+      }));
+    }
+    function updateAdPreview() {
+      const a = { ...adminAds[adSel] };
+      if (a.url && !/^https?:\/\//i.test(a.url)) a.url = 'https://' + a.url;
+      const html = adHtml(a);
+      $('adPreview').innerHTML = html
+        ? (a.on ? '' : '<div class="text-[11px] text-amber-600 mb-1">⚪ هذا الإعلان غير مفعّل ولن يظهر للمستخدمين</div>') + html
+        : '<div class="text-xs text-gray-400 border border-dashed border-gray-300 dark:border-slate-600 rounded-2xl p-6 text-center">اكتب العنوان والرابط لتظهر المعاينة</div>';
+      $('adPreview').querySelectorAll('a').forEach(x => x.addEventListener('click', ev => ev.preventDefault()));
+    }
+    [...AD_FIELDS, 'adOn'].forEach(id => $(id).addEventListener('input', () => { readAdFields(); updateAdPreview(); renderAdTabs(); }));
+    $('adOn').addEventListener('change', () => { readAdFields(); updateAdPreview(); renderAdTabs(); });
+    $('adClearBtn').addEventListener('click', () => { adminAds[adSel] = emptyAd(); renderAdTabs(); fillAdFields(); });
+
+    async function loadAdForm() {
+      const data = normalizeAdDoc(await loadAd(true));
+      adminAds = Array.from({ length: AD_MAX }, (_, i) => data.ads[i] ? { ...emptyAd(), ...data.ads[i] } : emptyAd());
+      $('adEnabled').checked = data.ads.length ? data.enabled : true;
+      adSel = 0;
+      renderAdTabs(); fillAdFields();
+    }
+
+    $('adForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.currentTarget, msg = $('adMsg');
+      readAdFields();
+      const out = [];
+      for (let i = 0; i < adminAds.length; i++) {
+        const a = { ...adminAds[i] };
+        if (!a.title && !a.url && !a.text && !a.image) continue; // خانة فارغة
+        const fail = (m) => { adSel = i; renderAdTabs(); fillAdFields(); setMsg(msg, `إعلان ${i + 1}: ${m}`); return true; };
+        if (!a.title) return fail('اكتب عنوان الإعلان.');
+        if (a.url && !/^https?:\/\//i.test(a.url)) a.url = 'https://' + a.url;
+        if (!safeHttpUrl(a.url) || a.url === 'https://') return fail('رابط الإعلان غير صالح.');
+        if (a.image && !/^https:\/\//i.test(a.image)) return fail('رابط الصورة يجب أن يبدأ بـ https://');
+        a.url = safeHttpUrl(a.url);
+        out.push(a);
+      }
+      const payload = { enabled: $('adEnabled').checked, ads: out };
+      setBusy(form, true, 'جاري النشر...');
+      try {
+        await currentUser.getIdToken(true);
+        await setDoc(doc(db, 'public', 'ad'), { ...payload, updatedAt: serverTimestamp() });
+        try { localStorage.setItem(AD_CACHE_KEY, JSON.stringify({ t: Date.now(), ad: payload })); } catch (x) {}
+        renderAdSlot(payload);
+        adminAds = Array.from({ length: AD_MAX }, (_, i) => out[i] ? { ...out[i] } : emptyAd());
+        adSel = Math.min(adSel, AD_MAX - 1); renderAdTabs(); fillAdFields();
+        const active = out.filter(a => a.on).length;
+        setMsg(msg, !payload.enabled
+          ? 'تم الحفظ ✅ المساحة الإعلانية متوقفة حالياً عن المستخدمين.'
+          : active ? `تم النشر ✅ ${active === 1 ? 'إعلان واحد مفعّل' : active + ' إعلانات مفعّلة تتناوب'} أعلى صفحة الروابط.` : 'تم الحفظ ✅ لا يوجد إعلان مفعّل حالياً.', 'ok');
+      } catch (ex) { setMsg(msg, authErrorMessage(ex.code)); }
+      finally { setBusy(form, false); }
+    });
+
     // ===== صفحة حسابي =====
     function renderAccount() {
       if (!currentUser || !profile) return;
@@ -1062,49 +1288,7 @@
       $('accCreated').textContent = fmtDate(profile.createdAt);
       $('accLastLogin').textContent = profile.prevLogin ? fmtDate(profile.prevLogin, true) : 'هذه أول مرة';
       $('accLinks').textContent = links.length;
-      $('accNameInput').value = profile.name;
     }
-
-    $('nameForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.currentTarget, msg = $('nameMsg');
-      const name = $('accNameInput').value.trim();
-      if (!name) return setMsg(msg, 'اكتب اسماً.');
-      setBusy(form, true);
-      try {
-        await updateProfile(currentUser, { displayName: name });
-        await setDoc(doc(db, 'users', currentUser.uid), { name }, { merge: true });
-        profile.name = name;
-        applyUserToUI(); renderAccount();
-        setMsg(msg, 'تم حفظ الاسم ✅', 'ok');
-      } catch (ex) { setMsg(msg, authErrorMessage(ex.code)); }
-      finally { setBusy(form, false); }
-    });
-
-    $('passForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.currentTarget, msg = $('passMsg');
-      const cur = $('accCurPass').value, nw = $('accNewPass').value, nw2 = $('accNewPass2').value;
-      if (!cur) return setMsg(msg, 'اكتب كلمة المرور الحالية.');
-      if (nw.length < 6) return setMsg(msg, 'كلمة المرور الجديدة يجب أن تكون 6 أحرف على الأقل.');
-      if (nw !== nw2) return setMsg(msg, 'كلمتا المرور الجديدتان غير متطابقتين.');
-      if (nw === cur) return setMsg(msg, 'كلمة المرور الجديدة مطابقة للحالية.');
-      setBusy(form, true);
-      try {
-        await reauthenticateWithCredential(currentUser, EmailAuthProvider.credential(currentUser.email, cur));
-        await updatePassword(currentUser, nw);
-        form.reset();
-        setMsg(msg, 'تم تغيير كلمة المرور بنجاح ✅', 'ok');
-      } catch (ex) { setMsg(msg, authErrorMessage(ex.code)); }
-      finally { setBusy(form, false); }
-    });
-
-    $('accResetBtn').addEventListener('click', async () => {
-      try {
-        await sendPasswordResetEmail(auth, currentUser.email);
-        setMsg($('passMsg'), `أرسلنا رابط إعادة التعيين إلى <b dir="ltr">${escapeHtml(currentUser.email)}</b>. تحقق من بريدك (ومن مجلد Spam).`, 'ok');
-      } catch (ex) { setMsg($('passMsg'), authErrorMessage(ex.code)); }
-    });
 
     let deleteArmed = false, deleteArmTimer = null;
     $('deleteAccForm').addEventListener('submit', async (e) => {
@@ -1132,28 +1316,73 @@
     });
 
     // ===== لوحة الإحصائيات (للمشرف فقط) =====
+    // الإحصائيات تُحدَّث مرة واحدة يومياً بعد الساعة 9 مساءً بتوقيت إسطنبول،
+    // وتُحفظ نسخة منها في meta/stats فتُعرض طوال اليوم بقراءة واحدة فقط.
+    const STATS_HOUR = 21;
+    const STATS_TZ = 'Europe/Istanbul';
+    let adminFetchedAt = null;
+
+    function istanbulNow(when = new Date()) {
+      const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hour12: false }).formatToParts(when);
+      const g = (t) => parts.find(p => p.type === t).value;
+      return { date: `${g('year')}-${g('month')}-${g('day')}`, hour: parseInt(g('hour'), 10) % 24 };
+    }
+
+    function fromSnapshot(data) {
+      adminFetchedAt = data.fetchedAt || null;
+      adminUsers = (data.users || []).map(u => ({
+        name: u.n || '', email: u.e || '', emailVerified: !!u.v,
+        createdAt: u.c ? new Date(u.c) : null, lastLoginAt: u.l ? new Date(u.l) : null, linksCount: Number(u.k) || 0
+      }));
+    }
+
+    function setAdminStatus(html) { const el = $('adminStatus'); el.innerHTML = html; el.classList.remove('hidden'); }
+
     async function loadAdmin() {
       $('adminStats').innerHTML = '<div class="col-span-full text-center text-xs text-gray-400 py-6">جاري تحميل الإحصائيات...</div>';
       $('adminChart').innerHTML = ''; $('adminTableBody').innerHTML = '';
+      $('adminStatus').classList.add('hidden');
       try {
         // تحديث رمز الدخول ليحمل حالة "البريد مؤكَّد" الحالية (الرمز القديم المخزّن قد لا يحملها)
         await currentUser.getIdToken(true);
-        const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
-        adminUsers = snap.docs.map(d => {
-          const x = d.data();
-          return { uid: d.id, name: x.name || '', email: x.email || '', emailVerified: !!x.emailVerified, createdAt: toDate(x.createdAt), lastLoginAt: toDate(x.lastLoginAt), linksCount: Number(x.linksCount) || 0 };
-        });
+        const mref = doc(db, 'meta', 'stats');
+        const msnap = await getDoc(mref);
+        const cached = msnap.exists() ? msnap.data() : null;
+        const { date, hour } = istanbulNow();
+        const canRefresh = hour >= STATS_HOUR && (!cached || cached.date !== date);
+
+        if (canRefresh) {
+          const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
+          const payload = {
+            date, fetchedAt: Date.now(),
+            users: snap.docs.map(d => {
+              const x = d.data(), c = toDate(x.createdAt), l = toDate(x.lastLoginAt);
+              return { n: x.name || '', e: x.email || '', v: !!x.emailVerified, c: c ? c.getTime() : null, l: l ? l.getTime() : null, k: Number(x.linksCount) || 0 };
+            })
+          };
+          await setDoc(mref, payload);
+          fromSnapshot(payload);
+        } else if (cached) {
+          fromSnapshot(cached);
+        } else {
+          adminUsers = [];
+          $('adminStats').innerHTML = `<div class="col-span-full card text-center text-sm leading-relaxed">🕘 أول إحصائية تصبح متاحة <b>اليوم الساعة 9:00 مساءً</b> بتوقيت إسطنبول.<br><span class="text-xs text-gray-500">تُحدَّث الإحصائيات مرة واحدة يومياً حفاظاً على الحصة المجانية.</span></div>`;
+          return;
+        }
+
+        const nextIsToday = hour < STATS_HOUR;
+        setAdminStatus(`🕘 آخر تحديث: <b>${fmtDate(new Date(adminFetchedAt), true)}</b> — التحديث القادم: <b>${nextIsToday ? 'اليوم' : 'غداً'} الساعة 9:00 مساءً</b> (توقيت إسطنبول). تُحدَّث الإحصائيات مرة واحدة يومياً.`);
         renderAdmin();
       } catch (ex) {
         console.error(ex);
         $('adminStats').innerHTML = `<div class="col-span-full err text-center">${ex.code === 'permission-denied'
-          ? 'ليست لديك صلاحية قراءة المستخدمين. تأكد أن بريدك مضاف في قواعد Firestore وأنه مؤكَّد.'
+          ? 'ليست لديك صلاحية قراءة الإحصائيات. تأكد أنك نشرت قواعد Firestore الجديدة، وأن بريدك مؤكَّد.'
           : authErrorMessage(ex.code)}</div>`;
       }
     }
 
     function renderAdmin() {
-      const now = Date.now(), DAY = 86400000;
+      const now = adminFetchedAt || Date.now(), DAY = 86400000;
       const within = (d, days) => d && (now - d.getTime()) <= days * DAY;
       const totalLinks = adminUsers.reduce((s, u) => s + u.linksCount, 0);
       const stats = [
@@ -1175,7 +1404,7 @@
       // مخطط آخر 14 يوماً
       const days = [];
       for (let i = 13; i >= 0; i--) {
-        const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
+        const d = new Date(now); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i);
         days.push({ d, n: 0 });
       }
       adminUsers.forEach(u => {
@@ -1211,7 +1440,6 @@
     }
 
     $('adminSearch').addEventListener('input', renderAdminTable);
-    $('adminRefreshBtn').addEventListener('click', loadAdmin);
     $('adminCsvBtn').addEventListener('click', () => {
       if (!adminUsers.length) return showToast('لا توجد بيانات للتصدير', '⚠️');
       const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
