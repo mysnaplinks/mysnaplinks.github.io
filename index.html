@@ -218,6 +218,7 @@
             <div class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
               <span id="syncDot" class="w-2 h-2 rounded-full bg-green-500 inline-block" title="متزامن"></span>
               <span id="activeEmailLabel" class="font-medium truncate max-w-[120px] sm:max-w-[240px]"></span>
+              <span id="roleBadge" class="hidden px-1.5 py-0.5 rounded-md text-[10px] font-bold"></span>
             </div>
           </div>
         </div>
@@ -396,8 +397,28 @@
 
     <!-- الواجهة 4: إحصائيات المشرف -->
     <section id="adminView" class="hidden space-y-5">
-      <!-- إدارة المساحة الإعلانية (حتى 4 إعلانات تتناوب) -->
-      <div class="card sm:p-6">
+      <!-- فريق الإدارة (للمالكين فقط) -->
+      <div id="staffCard" class="hidden card sm:p-6">
+        <h2 class="text-lg font-extrabold mb-1">👥 فريق الإدارة</h2>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mb-4 leading-relaxed space-y-1">
+          <div><b>👑 المالك الأساسي</b>: صاحب الموقع، وهو وحده يعيّن المالكين أو يزيلهم، ولا يمكن إزالته.</div>
+          <div><b>👑 المالك</b>: يدير الإعلانات ويعيّن المشرفين ويزيلهم، ويرى الإحصائيات ويرسل روابط الاستعادة.</div>
+          <div><b>🛡️ المشرف</b>: يرى الإحصائيات ويرسل روابط الاستعادة فقط.</div>
+          <div class="text-amber-600 dark:text-amber-400">يجب أن يكون البريد مؤكَّداً، وأن يسجّل صاحبه الخروج ثم الدخول لتظهر له صفته الجديدة.</div>
+        </div>
+        <div id="staffList" class="space-y-2 mb-4"></div>
+        <form id="staffForm" class="flex flex-col sm:flex-row gap-2" novalidate>
+          <input type="email" id="staffEmailInput" class="inp sm:flex-1" dir="ltr" placeholder="بريد المستخدم">
+          <select id="staffRoleSelect" class="inp sm:!w-36">
+            <option value="moderator">🛡️ مشرف</option>
+            <option value="owner">👑 مالك</option>
+          </select>
+          <button type="submit" class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-xl font-bold text-sm whitespace-nowrap">تعيين</button>
+        </form>
+      </div>
+
+      <!-- إدارة المساحة الإعلانية (حتى 4 إعلانات تتناوب) — للمالك فقط -->
+      <div id="adCard" class="hidden card sm:p-6">
         <div class="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
           <h2 class="text-lg font-extrabold">📢 المساحة الإعلانية <span class="text-xs font-medium text-gray-400">(حتى 4 إعلانات تتناوب)</span></h2>
           <label class="flex items-center gap-2 text-sm font-bold cursor-pointer"><input type="checkbox" id="adEnabled" class="w-4 h-4 accent-green-600"> تشغيل المساحة الإعلانية</label>
@@ -462,7 +483,7 @@
         <div class="overflow-x-auto">
           <table class="w-full text-xs text-right">
             <thead class="text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-slate-700">
-              <tr><th class="py-2 px-2">#</th><th class="py-2 px-2">الاسم</th><th class="py-2 px-2">البريد</th><th class="py-2 px-2">مؤكد</th><th class="py-2 px-2">التسجيل</th><th class="py-2 px-2">آخر نشاط</th><th class="py-2 px-2">الروابط</th><th class="py-2 px-2">إجراء</th></tr>
+              <tr><th class="py-2 px-2">#</th><th class="py-2 px-2">الاسم</th><th class="py-2 px-2">البريد</th><th class="py-2 px-2">مؤكد</th><th class="py-2 px-2">التسجيل</th><th class="py-2 px-2">آخر نشاط</th><th class="py-2 px-2">الروابط</th><th class="py-2 px-2">الصفة</th><th class="py-2 px-2">إجراء</th></tr>
             </thead>
             <tbody id="adminTableBody"></tbody>
           </table>
@@ -737,6 +758,7 @@
             showToast(isQuotaError(ex.code) ? QUOTA_MSG : 'تعذر تحميل بياناتك من السحابة', '⚠️');
             if (!profile) profile = { name: user.displayName || user.email.split('@')[0], email: user.email, linksCount: links.length };
           }
+          userRole = await detectRole(user);
           applyUserToUI();
           authModal.classList.add('hidden');
           loadingScreen.classList.add('hidden');
@@ -826,8 +848,40 @@
       }, 500);
     }
 
-    function isAdmin() {
-      return !!(currentUser && currentUser.emailVerified && ADMIN_EMAILS.map(x => x.toLowerCase()).includes((currentUser.email || '').toLowerCase()));
+    // ===== الصلاحيات =====
+    // 👑 مالك أساسي: ADMIN_EMAILS (ثابت في الكود، لا يُزال)
+    // 👑 مالك / 🛡️ مشرف: يُعيَّنان من التطبيق (Firestore: staff/{email} → role)
+    let userRole = 'user';          // 'owner' | 'moderator' | 'user'
+    let staffMap = {};              // email → 'owner' | 'moderator'
+    const PRIMARY_OWNERS = ADMIN_EMAILS.map(x => x.toLowerCase());
+    const isPrimaryOwnerEmail = (e) => PRIMARY_OWNERS.includes(String(e || '').toLowerCase());
+    const ROLE_CACHE_MS = 24 * 60 * 60 * 1000;
+    const myEmail = () => String((currentUser && currentUser.email) || '').toLowerCase();
+
+    function isPrimaryOwner() { return !!(currentUser && currentUser.emailVerified && isPrimaryOwnerEmail(currentUser.email)); }
+    function isSiteOwner() { return !!(currentUser && currentUser.emailVerified && userRole === 'owner'); }
+    // "isAdmin" = له حق دخول قسم الإدارة (مالك أو مشرف)
+    function isAdmin() { return !!(currentUser && currentUser.emailVerified && (userRole === 'owner' || userRole === 'moderator')); }
+
+    // تحديد صفة المستخدم: قراءة واحدة يومياً لكل جهاز على الأكثر (مخزّنة محلياً)
+    async function detectRole(user, force = false) {
+      if (!user) return 'user';
+      if (isPrimaryOwnerEmail(user.email)) return 'owner';
+      if (!user.emailVerified) return 'user';
+      const key = 'mysnap_role_' + user.uid;
+      if (!force) {
+        try { const c = JSON.parse(localStorage.getItem(key) || 'null'); if (c && Date.now() - c.t < ROLE_CACHE_MS) return c.role; } catch (e) {}
+      }
+      let role = 'user';
+      try {
+        const snap = await getDoc(doc(db, 'staff', user.email.toLowerCase()));
+        if (snap.exists()) role = snap.data().role === 'owner' ? 'owner' : 'moderator';
+      } catch (e) {}
+      try { localStorage.setItem(key, JSON.stringify({ t: Date.now(), role })); } catch (e) {}
+      return role;
+    }
+    function clearRoleCache() {
+      try { Object.keys(localStorage).filter(k => k.startsWith('mysnap_role_')).forEach(k => localStorage.removeItem(k)); } catch (e) {}
     }
 
     function applyUserToUI() {
@@ -835,15 +889,22 @@
       activeEmailLabel.title = currentUser ? currentUser.email : '';
       $('adminTabBtn').classList.toggle('hidden', !isAdmin());
       $('verifyBanner').classList.toggle('hidden', !currentUser || currentUser.emailVerified);
+      const badge = $('roleBadge');
+      if (isAdmin()) {
+        const owner = userRole === 'owner';
+        badge.textContent = owner ? '👑 مالك' : '🛡️ مشرف';
+        badge.className = 'px-1.5 py-0.5 rounded-md text-[10px] font-bold ' + (owner ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' : 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300');
+      } else { badge.className = 'hidden'; badge.textContent = ''; }
     }
 
     function resetState() {
-      currentUser = null; profile = null; links = []; adminUsers = [];
+      currentUser = null; profile = null; links = []; adminUsers = []; userRole = 'user'; staffMap = {};
       currentCategory = 'all'; searchQuery = ''; pendingDeleteId = null;
       searchInputs.forEach(i => i.value = '');
       [groupedRowsContainer, settingsCardsContainer, dashboardCategoryBadges, settingsCategoryTabs, $('adminTableBody'), $('adminStats'), $('adminChart')].forEach(el => el.innerHTML = '');
       activeEmailLabel.textContent = '';
       $('adminTabBtn').classList.add('hidden');
+      $('roleBadge').className = 'hidden';
       $('verifyBanner').classList.add('hidden');
       stopAdRotation(); $('adSlot').innerHTML = ''; $('adSlot').classList.add('hidden');
       $('deleteAccForm').reset();
@@ -853,6 +914,7 @@
 
     $('logoutBtn').addEventListener('click', async () => {
       if (!auth) return;
+      clearRoleCache();
       await signOut(auth);
       showToast('تم تسجيل الخروج بنجاح');
     });
@@ -868,6 +930,7 @@
         if (currentUser.emailVerified) {
           await currentUser.getIdToken(true);
           await setDoc(doc(db, 'users', currentUser.uid), { emailVerified: true }, { merge: true });
+          userRole = await detectRole(currentUser, true);
           applyUserToUI(); if (currentView === 'account') renderAccount();
           showToast('تم تأكيد بريدك بنجاح ✅');
         } else {
@@ -892,7 +955,15 @@
       if (view === 'dashboard') renderDashboard();
       else if (view === 'settings') renderSettings();
       else if (view === 'account') renderAccount();
-      else if (view === 'admin') { loadAdmin(); loadAdForm(); }
+      else if (view === 'admin') {
+        const owner = isSiteOwner();
+        $('staffRoleSelect').querySelector('option[value="owner"]').disabled = !isPrimaryOwner();
+        $('adCard').classList.toggle('hidden', !owner);
+        $('staffCard').classList.toggle('hidden', !owner);
+        loadAdmin();
+        loadStaff();
+        if (owner) loadAdForm();
+      }
     }
     document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => switchView(btn.dataset.view)));
     $('goToSettingsBtn').addEventListener('click', () => { switchView('settings'); openNewForm(); });
@@ -1453,9 +1524,11 @@
           <td class="py-2 px-2 whitespace-nowrap">${fmtDate(u.createdAt)}</td>
           <td class="py-2 px-2 whitespace-nowrap">${fmtDate(u.lastLoginAt, true)}</td>
           <td class="py-2 px-2 font-bold">${u.linksCount}</td>
-          <td class="py-2 px-2 whitespace-nowrap"><button type="button" class="admin-reset-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900 hover:bg-amber-100 transition" data-email="${escapeHtml(u.email)}">🔑 رابط استعادة</button></td>
-        </tr>`).join('') : '<tr><td colspan="8" class="text-center text-gray-400 py-6">لا توجد نتائج</td></tr>';
+          <td class="py-2 px-2 whitespace-nowrap">${roleLabel(u.email)}</td>
+          <td class="py-2 px-2 whitespace-nowrap flex gap-1.5">${roleButtons(u)}<button type="button" class="admin-reset-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-900 hover:bg-amber-100 transition" data-email="${escapeHtml(u.email)}">🔑 رابط استعادة</button></td>
+        </tr>`).join('') : '<tr><td colspan="9" class="text-center text-gray-400 py-6">لا توجد نتائج</td></tr>';
       $('adminTableBody').querySelectorAll('.admin-reset-btn').forEach(b => b.addEventListener('click', () => adminSendReset(b)));
+      $('adminTableBody').querySelectorAll('.role-btn').forEach(b => b.addEventListener('click', () => armThen(b, () => setRole(b.dataset.email, b.dataset.role))));
     }
 
     // المشرف وحده يرسل رابط استعادة كلمة المرور (ضغطتان للتأكيد) — المستخدم لا يستطيع طلبه بنفسه
@@ -1477,6 +1550,114 @@
         showToast(isQuotaError(ex.code) ? QUOTA_MSG : 'تعذر الإرسال: ' + (ex.code || ''), '⚠️');
       }
     }
+
+    // ===== فريق الإدارة =====
+    function roleOf(email) {
+      const e = String(email || '').toLowerCase();
+      if (isPrimaryOwnerEmail(e)) return 'primary';
+      return staffMap[e] || 'user';
+    }
+    const ROLE_CHIP = {
+      primary: '<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">👑 مالك أساسي</span>',
+      owner: '<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">👑 مالك</span>',
+      moderator: '<span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300">🛡️ مشرف</span>',
+      user: '<span class="text-[11px] text-gray-400">مستخدم</span>'
+    };
+    function roleLabel(email) { return ROLE_CHIP[roleOf(email)]; }
+
+    // من يستطيع تغيير صفة من؟ — الأساسي: الجميع ما عدا الأساسيين | المالك: المستخدمون والمشرفون فقط
+    function canManage(targetRole, newRole) {
+      if (!isSiteOwner() || targetRole === 'primary') return false;
+      if (isPrimaryOwner()) return true;
+      return targetRole !== 'owner' && newRole !== 'owner';
+    }
+    const ROLE_BTN = {
+      moderator: ['🛡️ مشرف', 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-900'],
+      owner: ['👑 مالك', 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-900'],
+      none: ['➖ إزالة الصفة', 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-900']
+    };
+    function roleButtons(u) {
+      const email = String(u.email || '').toLowerCase();
+      const cur = roleOf(email);
+      if (email === myEmail()) return '';
+      const options = { user: ['moderator', 'owner'], moderator: ['owner', 'none'], owner: ['moderator', 'none'], primary: [] }[cur];
+      return options.filter(nr => canManage(cur, nr)).map(nr =>
+        `<button type="button" class="role-btn px-2.5 py-1 rounded-lg text-[11px] font-bold border transition ${ROLE_BTN[nr][1]}" data-email="${escapeHtml(email)}" data-role="${nr}">${ROLE_BTN[nr][0]}</button>`
+      ).join('');
+    }
+    // ضغطتان للتأكيد
+    function armThen(btn, fn) {
+      if (btn.dataset.armed !== '1') {
+        btn.dataset.armed = '1'; btn.dataset.label = btn.textContent; btn.textContent = 'تأكيد؟';
+        setTimeout(() => { if (btn.isConnected && btn.dataset.armed === '1') { btn.dataset.armed = ''; btn.textContent = btn.dataset.label; } }, 4000);
+        return;
+      }
+      btn.dataset.armed = ''; btn.disabled = true; fn();
+    }
+
+    async function loadStaff() {
+      try {
+        const snap = await getDocs(collection(db, 'staff'));
+        staffMap = {};
+        snap.docs.forEach(d => { staffMap[d.id.toLowerCase()] = d.data().role === 'owner' ? 'owner' : 'moderator'; });
+      } catch (e) { staffMap = {}; }
+      renderStaffCard();
+      renderAdminTable();
+    }
+
+    function renderStaffCard() {
+      if (!isSiteOwner()) return;
+      const nameOf = (e) => { const u = adminUsers.find(x => x.email.toLowerCase() === e); return u ? u.name : ''; };
+      const row = (e, role) => {
+        const tone = role === 'moderator' ? 'bg-sky-50 dark:bg-sky-950/30' : 'bg-amber-50 dark:bg-amber-950/30';
+        const btns = (role === 'primary' ? [] : (role === 'owner' ? ['moderator', 'none'] : ['owner', 'none']))
+          .filter(nr => canManage(role, nr) && e !== myEmail())
+          .map(nr => `<button type="button" class="staff-role-btn px-2 py-1 rounded-lg text-[11px] font-bold border ${ROLE_BTN[nr][1]}" data-email="${escapeHtml(e)}" data-role="${nr}">${nr === 'none' ? 'إزالة' : ROLE_BTN[nr][0]}</button>`).join('');
+        return `<div class="flex flex-wrap items-center justify-between gap-2 ${tone} rounded-xl px-3 py-2 text-xs">
+          <span><b>${escapeHtml(nameOf(e))}</b> <span dir="ltr" class="text-gray-500">${escapeHtml(e)}</span>${e === myEmail() ? ' <span class="text-gray-400">(أنت)</span>' : ''}</span>
+          <span class="flex items-center gap-1.5">${ROLE_CHIP[role]}${btns}</span></div>`;
+      };
+      const owners = Object.keys(staffMap).filter(e => staffMap[e] === 'owner');
+      const mods = Object.keys(staffMap).filter(e => staffMap[e] === 'moderator');
+      $('staffList').innerHTML = PRIMARY_OWNERS.map(e => row(e, 'primary')).join('')
+        + owners.map(e => row(e, 'owner')).join('')
+        + (mods.length ? mods.map(e => row(e, 'moderator')).join('') : '<div class="text-xs text-gray-400 px-1">لا يوجد مشرفون حالياً.</div>');
+      $('staffList').querySelectorAll('.staff-role-btn').forEach(b => b.addEventListener('click', () => armThen(b, () => setRole(b.dataset.email, b.dataset.role))));
+    }
+
+    // role: 'owner' | 'moderator' | 'none' (إزالة الصفة)
+    async function setRole(email, role) {
+      email = String(email || '').trim().toLowerCase();
+      const cur = roleOf(email);
+      if (!isValidEmail(email)) return showToast('اكتب بريداً صحيحاً', '⚠️');
+      if (cur === 'primary') return showToast('هذا المالك الأساسي، ولا يمكن تغيير صفته', 'ℹ️');
+      if (email === myEmail()) return showToast('لا يمكنك تغيير صفتك بنفسك', 'ℹ️');
+      if (!canManage(cur, role)) return showToast('تعيين المالكين أو إزالتهم صلاحية للمالك الأساسي فقط', '⚠️');
+      try {
+        await currentUser.getIdToken(true);
+        if (role === 'none') {
+          await deleteDoc(doc(db, 'staff', email));
+          delete staffMap[email];
+          showToast(`أُزيلت الصفة عن ${email}`);
+        } else {
+          const u = adminUsers.find(x => x.email.toLowerCase() === email);
+          await setDoc(doc(db, 'staff', email), { email, name: u ? u.name : '', role, addedAt: serverTimestamp() });
+          staffMap[email] = role;
+          showToast(`تم تعيين ${email} ${role === 'owner' ? 'مالكاً 👑' : 'مشرفاً 🛡️'}`);
+        }
+      } catch (ex) { showToast(authErrorMessage(ex.code), '⚠️'); }
+      renderStaffCard();
+      renderAdminTable();
+    }
+
+    $('staffForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = $('staffEmailInput').value.trim().toLowerCase();
+      const role = $('staffRoleSelect').value;
+      if (roleOf(email) === role) return showToast('هذا البريد يحمل هذه الصفة بالفعل', 'ℹ️');
+      await setRole(email, role);
+      if (roleOf(email) === role) $('staffEmailInput').value = '';
+    });
 
     $('adminSearch').addEventListener('input', renderAdminTable);
     $('adminCsvBtn').addEventListener('click', () => {
