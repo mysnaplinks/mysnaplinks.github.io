@@ -100,7 +100,7 @@
       <button 
         type="button" 
         id="googleDirectBtn" 
-        class="w-full py-2.5 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 border border-gray-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs sm:text-sm shadow-xs transition flex items-center justify-center gap-2 cursor-pointer"
+        class="w-full py-2.5 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 border border-gray-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs sm:text-sm shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
       >
         <svg class="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24">
           <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -151,7 +151,7 @@
             <div class="absolute right-3 text-gray-400 pointer-events-none">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
-            <kbd class="absolute left-2.5 hidden sm:inline-block bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded px-1.5 py-0.5 text-[10px] text-gray-400 font-mono shadow-xs">Ctrl K</kbd>
+            <kbd class="absolute left-2.5 hidden sm:inline-block bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded px-1.5 py-0.5 text-[10px] text-gray-400 font-mono shadow-sm">Ctrl K</kbd>
           </div>
         </div>
 
@@ -208,7 +208,7 @@
       <div class="flex items-center justify-between gap-3 pb-3 border-b border-gray-200 dark:border-slate-700">
         <div id="dashboardCategoryBadges" class="flex items-center gap-2 overflow-x-auto pb-1 flex-1"></div>
         <div class="flex items-center gap-2 flex-shrink-0">
-          <button id="goToSettingsBtn" class="text-xs font-semibold px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:border-green-500 rounded-xl text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5 shadow-2xs">
+          <button id="goToSettingsBtn" class="text-xs font-semibold px-3.5 py-1.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 hover:border-green-500 rounded-xl text-slate-700 dark:text-slate-300 transition flex items-center gap-1.5 shadow-sm">
             <span class="text-green-500 font-bold text-sm">+</span>
             <span>إضافة رابط جديد</span>
           </button>
@@ -386,7 +386,7 @@
       const userKey = `mysnap_pin_${email}`;
       const savedPin = localStorage.getItem(userKey);
 
-      if (savedPin && savedPin !== pin) {
+      if (savedPin && (savedPin !== pin || savedPin === '__google_only__')) {
         showToast('رمز المرور غير صحيح لهذا الحساب!', '⚠️');
         return;
       }
@@ -411,6 +411,15 @@
     logoutBtn.addEventListener('click', () => {
       localStorage.removeItem('mysnap_active_session');
       currentEmail = '';
+      links = [];
+      currentCategory = 'all';
+      searchQuery = '';
+      globalSearchInput.value = '';
+      groupedRowsContainer.innerHTML = '';
+      settingsCardsContainer.innerHTML = '';
+      dashboardCategoryBadges.innerHTML = '';
+      settingsCategoryTabs.innerHTML = '';
+      closeForm();
       userEmailInput.value = '';
       userPinInput.value = '';
       authModal.classList.remove('hidden');
@@ -431,15 +440,13 @@
       if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
         google.accounts.id.prompt((notification) => {
           if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            userEmailInput.value = 'mysnaplinks@gmail.com';
-            userPinInput.focus();
-            showToast('أدخل رمز المرور السري للدخول', 'ℹ️');
+            userEmailInput.focus();
+            showToast('تعذر فتح نافذة جوجل، سجّل الدخول بالبريد والرمز', 'ℹ️');
           }
         });
       } else {
-        userEmailInput.value = 'mysnaplinks@gmail.com';
-        userPinInput.focus();
-        showToast('أدخل رمز المرور السري للدخول', 'ℹ️');
+        userEmailInput.focus();
+        showToast('تعذر فتح نافذة جوجل، سجّل الدخول بالبريد والرمز', 'ℹ️');
       }
     });
 
@@ -453,7 +460,9 @@
     }
 
     function initGoogleAuth() {
+      let gsiTries = 0;
       const checkGsi = setInterval(() => {
+        if (++gsiTries > 60) { clearInterval(checkGsi); return; }
         if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
           clearInterval(checkGsi);
           try {
@@ -462,7 +471,9 @@
               callback: (res) => {
                 const payload = parseJwt(res.credential);
                 if (payload && payload.email) {
-                  loginUser(payload.email.toLowerCase());
+                  const gEmail = payload.email.toLowerCase();
+                  if (!localStorage.getItem(`mysnap_pin_${gEmail}`)) localStorage.setItem(`mysnap_pin_${gEmail}`, '__google_only__');
+                  loginUser(gEmail);
                 }
               }
             });
@@ -503,7 +514,8 @@
       toastIcon.textContent = icon;
       toast.classList.remove('translate-y-20', 'opacity-0');
       toast.classList.add('translate-y-0', 'opacity-100');
-      setTimeout(() => {
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => {
         toast.classList.remove('translate-y-0', 'opacity-100');
         toast.classList.add('translate-y-20', 'opacity-0');
       }, 2500);
@@ -524,14 +536,14 @@
       if (view === 'dashboard') {
         linksDashboardView.classList.remove('hidden');
         settingsManageView.classList.add('hidden');
-        viewLinksTabBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition bg-green-600 text-white shadow-sm shadow-green-600/20';
-        viewSettingsTabBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium rounded-xl transition bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600';
+        viewLinksTabBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl transition bg-green-600 text-white shadow-sm shadow-green-600/20';
+        viewSettingsTabBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-medium rounded-xl transition bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600';
         renderDashboard();
       } else {
         linksDashboardView.classList.add('hidden');
         settingsManageView.classList.remove('hidden');
-        viewSettingsTabBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition bg-green-600 text-white shadow-sm shadow-green-600/20';
-        viewLinksTabBtn.className = 'flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium rounded-xl transition bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600';
+        viewSettingsTabBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl transition bg-green-600 text-white shadow-sm shadow-green-600/20';
+        viewLinksTabBtn.className = 'flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-medium rounded-xl transition bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600';
         renderSettings();
       }
     }
@@ -541,7 +553,8 @@
     goToSettingsBtn.addEventListener('click', () => { switchView('settings'); openNewForm(); });
 
     darkModeToggle.addEventListener('click', () => {
-      document.documentElement.classList.toggle('dark');
+      const isDark = document.documentElement.classList.toggle('dark');
+      try { localStorage.setItem('mysnap_theme', isDark ? 'dark' : 'light'); } catch (e) {}
     });
 
     function updateGroupsDatalist() {
@@ -559,7 +572,7 @@
         </button>
       `;
       groups.forEach(group => {
-        const count = links.filter(l => l.group === group).length;
+        const count = links.filter(l => l.group.trim() === group).length;
         const isActive = currentCategory === group;
         badgesHtml += `
           <button data-cat="${escapeHtml(group)}" class="dash-cat-btn px-3 py-1.5 rounded-xl text-xs font-medium transition whitespace-nowrap ${isActive ? 'bg-green-600 text-white shadow-sm font-bold' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'}">
@@ -572,13 +585,14 @@
         btn.addEventListener('click', () => { currentCategory = btn.getAttribute('data-cat'); renderDashboard(); });
       });
 
+      if (currentCategory !== 'all' && !groups.includes(currentCategory)) currentCategory = 'all';
       let activeGroups = currentCategory !== 'all' ? [currentCategory] : groups;
       const q = searchQuery.toLowerCase().trim();
       let totalMatchingLinks = 0;
       let rowsHtml = '';
 
       activeGroups.forEach(group => {
-        let groupLinks = links.filter(l => l.group === group);
+        let groupLinks = links.filter(l => l.group.trim() === group);
         if (q) {
           groupLinks = groupLinks.filter(l => l.name.toLowerCase().includes(q) || l.url.toLowerCase().includes(q) || l.group.toLowerCase().includes(q));
         }
@@ -586,7 +600,7 @@
         totalMatchingLinks += groupLinks.length;
 
         rowsHtml += `
-          <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-slate-700 shadow-xs hover:border-gray-300 dark:hover:border-slate-600 transition">
+          <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 sm:p-5 border border-gray-200 dark:border-slate-700 shadow-sm hover:border-gray-300 dark:hover:border-slate-600 transition">
             <div class="flex items-center justify-between mb-3 pb-2 border-b border-gray-100 dark:border-slate-700/60">
               <div class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block"></span>
@@ -596,9 +610,9 @@
             </div>
             <div class="flex flex-wrap items-center gap-2.5">
               ${groupLinks.map(link => `
-                <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="group inline-flex items-center gap-2 px-3.5 py-2 bg-gray-50 dark:bg-slate-700/70 hover:bg-green-50 dark:hover:bg-slate-600/90 border border-gray-200 dark:border-slate-600 hover:border-green-400 dark:hover:border-green-500 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 shadow-xs hover:shadow-sm transition-all transform hover:-translate-y-0.5">
+                <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="group inline-flex items-center gap-2 px-3.5 py-2 bg-gray-50 dark:bg-slate-700/70 hover:bg-green-50 dark:hover:bg-slate-600/90 border border-gray-200 dark:border-slate-600 hover:border-green-400 dark:hover:border-green-500 rounded-xl text-xs sm:text-sm font-semibold text-slate-800 dark:text-slate-100 shadow-sm hover:shadow-sm transition-all transform hover:-translate-y-0.5">
                   <div class="w-5 h-5 rounded-md overflow-hidden flex items-center justify-center bg-white dark:bg-slate-800 flex-shrink-0 border border-gray-100 dark:border-slate-700 p-0.5">
-                    <img src="${getFaviconUrl(link)}" alt="" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='https://www.google.com/s2/favicons?domain=google.com&sz=32'">
+                    <img src="${escapeHtml(getFaviconUrl(link))}" alt="" class="w-full h-full object-contain" onerror="this.onerror=null; this.src='https://www.google.com/s2/favicons?domain=google.com&sz=32'">
                   </div>
                   <span class="truncate max-w-[150px] sm:max-w-[180px]">${escapeHtml(link.name)}</span>
                 </a>
@@ -610,6 +624,7 @@
 
       if (totalMatchingLinks === 0) {
         groupedRowsContainer.innerHTML = '';
+        dashboardEmptyState.querySelector('h3').textContent = q ? 'لا توجد نتائج مطابقة لبحثك' : 'لا توجد روابط مسجلة بعد';
         dashboardEmptyState.classList.remove('hidden');
       } else {
         dashboardEmptyState.classList.add('hidden');
@@ -627,7 +642,7 @@
         </button>
       `;
       groups.forEach(group => {
-        const count = links.filter(l => l.group === group).length;
+        const count = links.filter(l => l.group.trim() === group).length;
         const isActive = currentCategory === group;
         tabsHtml += `
           <button data-cat="${escapeHtml(group)}" class="set-cat-btn px-3 py-1.5 rounded-xl text-xs font-medium transition whitespace-nowrap ${isActive ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border border-green-300 dark:border-green-800 font-bold' : 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700'}">
@@ -641,7 +656,7 @@
       });
 
       let filtered = [...links];
-      if (currentCategory !== 'all') filtered = filtered.filter(l => l.group === currentCategory);
+      if (currentCategory !== 'all') filtered = filtered.filter(l => l.group.trim() === currentCategory);
       if (searchQuery.trim() !== '') {
         const q = searchQuery.toLowerCase().trim();
         filtered = filtered.filter(l => l.name.toLowerCase().includes(q) || l.url.toLowerCase().includes(q) || l.group.toLowerCase().includes(q));
@@ -656,10 +671,10 @@
       settingsEmptyState.classList.add('hidden');
 
       settingsCardsContainer.innerHTML = filtered.map(link => `
-        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-gray-200 dark:border-slate-700 shadow-xs hover:shadow-sm transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-sm transition flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div class="flex items-center gap-3.5 flex-1 min-w-0">
             <div class="w-11 h-11 rounded-xl bg-gray-50 dark:bg-slate-700 border border-gray-100 dark:border-slate-600 flex items-center justify-center p-2 flex-shrink-0">
-              <img src="${getFaviconUrl(link)}" alt="" class="w-7 h-7 rounded-md object-contain" onerror="this.onerror=null; this.src='https://www.google.com/s2/favicons?domain=google.com&sz=64';">
+              <img src="${escapeHtml(getFaviconUrl(link))}" alt="" class="w-7 h-7 rounded-md object-contain" onerror="this.onerror=null; this.src='https://www.google.com/s2/favicons?domain=google.com&sz=64';">
             </div>
             <div class="min-w-0 flex-1">
               <a href="${escapeHtml(link.url)}" target="_blank" rel="noopener noreferrer" class="font-bold text-slate-900 dark:text-slate-100 hover:text-green-600 dark:hover:text-green-400 transition truncate block text-sm sm:text-base">
@@ -673,8 +688,8 @@
             </div>
           </div>
           <div class="flex items-center gap-2 w-full sm:w-auto justify-end pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 dark:border-slate-700/50">
-            <button class="edit-link-btn px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600 rounded-xl transition" data-id="${link.id}">تعديل</button>
-            <button class="delete-link-btn px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition" data-id="${link.id}">حذف</button>
+            <button class="edit-link-btn px-3 py-1.5 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600 rounded-xl transition" data-id="${escapeHtml(link.id)}">تعديل</button>
+            <button class="delete-link-btn px-3 py-1.5 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition" data-id="${escapeHtml(link.id)}">حذف</button>
           </div>
         </div>
       `).join('');
@@ -768,12 +783,12 @@
     });
 
     window.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k' && currentEmail) {
         e.preventDefault();
         globalSearchInput.focus();
         globalSearchInput.select();
       }
-      if (e.key === 'Escape') deleteModal.classList.add('hidden');
+      if (e.key === 'Escape') { pendingDeleteId = null; deleteModal.classList.add('hidden'); }
     });
 
     sortLinksBtn.addEventListener('click', () => {
@@ -801,22 +816,26 @@
         try {
           const imported = JSON.parse(event.target.result);
           if (Array.isArray(imported)) {
-            links = imported;
+            links = imported
+              .filter(l => l && typeof l.url === 'string' && /^https?:\/\//i.test(l.url) && typeof l.name === 'string')
+              .map(l => ({ id: String(l.id || Date.now() + Math.random()), name: l.name, url: l.url, group: String(l.group || 'عام').trim() || 'عام', icon: (typeof l.icon === 'string' && /^(https?:\/\/|[^:]*$)/i.test(l.icon)) ? l.icon : '' }));
             saveUserLinks();
             renderSettings();
             renderDashboard();
-            showToast(`تم استيراد ${imported.length} رابط بنجاح!`);
+            showToast(`تم استيراد ${links.length} رابط بنجاح!`);
           } else { showToast('صيغة الملف غير صالحة', '⚠️'); }
         } catch (err) { showToast('تعذر قراءة ملف JSON', '⚠️'); }
       };
       reader.readAsText(file);
+      e.target.value = '';
     });
 
     function escapeHtml(str) {
       if (!str) return '';
-      return String(str).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, ''');
+      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
+    try { if (localStorage.getItem('mysnap_theme') === 'dark') document.documentElement.classList.add('dark'); } catch (e) {}
     checkActiveSession();
     initGoogleAuth();
   </script>
