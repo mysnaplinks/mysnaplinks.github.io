@@ -166,7 +166,7 @@
             <b>⚠️ قبل إنشاء الحساب:</b>
             <ul class="list-disc pr-4 mt-1 space-y-0.5">
               <li><b>الاسم لا يمكن تغييره</b> بعد إنشاء الحساب، فاكتبه بشكل صحيح.</li>
-              <li><b>كلمة المرور لا يمكن تغييرها</b> من داخل التطبيق، فاحفظها جيداً. إن نسيتها تستعيدها عبر بريدك فقط.</li>
+              <li><b>كلمة المرور لا يمكن تغييرها</b>، فاحفظها جيداً. إن نسيتها فإعادة تعيينها تتم عن طريق إدارة الموقع فقط.</li>
             </ul>
             <label class="flex items-center gap-2 mt-2 font-bold cursor-pointer"><input type="checkbox" id="regAgree" class="w-4 h-4 accent-green-600"> قرأت التنبيه وفهمته</label>
           </div>
@@ -180,17 +180,21 @@
       <div id="forgotScreen" class="hidden">
         <button type="button" class="switch-to-login absolute top-4 right-4 text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-xs font-semibold flex items-center gap-1 transition"><span>→</span><span>رجوع</span></button>
         <div class="w-12 h-12 mx-auto rounded-2xl bg-green-500/10 flex items-center justify-center text-xl mb-3 mt-4">🔑</div>
-        <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">استعادة كلمة المرور</h2>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-5 leading-relaxed">اكتب بريدك المسجّل، وسنرسل إليه رابطاً لتعيين كلمة مرور جديدة.</p>
+        <h2 class="text-xl font-extrabold text-slate-900 dark:text-white">نسيت كلمة المرور؟</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 mb-4 leading-relaxed">لحماية حسابك، لا يمكن استعادة كلمة المرور ذاتياً. <b>إعادة تعيينها تتم عن طريق إدارة الموقع فقط</b>: أرسل طلبك، وبعد التحقق منه ترسل لك الإدارة رابطاً على بريدك تختار منه كلمة مرور جديدة بنفسك.</p>
         <form id="forgotForm" class="space-y-3.5 text-right" novalidate>
           <div>
-            <label class="lbl" for="forgotEmail">البريد الإلكتروني:</label>
+            <label class="lbl" for="forgotEmail">بريدك المسجّل:</label>
             <input type="email" id="forgotEmail" placeholder="name@example.com" autocomplete="email" class="inp" dir="ltr">
+          </div>
+          <div>
+            <label class="lbl" for="forgotName">اسمك المسجّل في الحساب:</label>
+            <input type="text" id="forgotName" placeholder="الاسم كما كتبته عند التسجيل" class="inp" maxlength="60">
           </div>
           <div id="forgotError" class="hidden err"></div>
           <div id="forgotSuccess" class="hidden ok leading-relaxed"></div>
-          <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed">لم تصلك الرسالة؟ تواصل مع إدارة الموقع على <a id="adminContactLink" href="#" class="text-green-600 dark:text-green-400 font-bold hover:underline" dir="ltr"></a> وسنرسل لك رابط الاستعادة.</p>
-          <button type="submit" class="btn-primary">إرسال رابط الاستعادة</button>
+          <button type="submit" class="btn-primary">إرسال طلب إعادة التعيين إلى الإدارة</button>
+          <p class="text-[11px] text-gray-500 dark:text-gray-400 leading-relaxed text-center">أو راسل الإدارة مباشرة على <a id="adminContactLink" href="#" class="text-green-600 dark:text-green-400 font-bold hover:underline" dir="ltr"></a></p>
         </form>
       </div>
 
@@ -371,7 +375,7 @@
 
       <div class="card">
         <h3 class="font-bold text-sm mb-2">🔒 الاسم وكلمة المرور</h3>
-        <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">الاسم وكلمة المرور ثابتان ولا يمكن تغييرهما من داخل التطبيق، حفاظاً على أمان الحساب. إن نسيت كلمة المرور، سجّل الخروج واضغط «نسيت كلمة المرور؟» في شاشة الدخول، لتصلك رسالة الاستعادة على بريدك.</p>
+        <p class="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">الاسم وكلمة المرور ثابتان ولا يمكن تغييرهما، حفاظاً على أمان الحساب. إن نسيت كلمة المرور، فإعادة تعيينها تتم عن طريق إدارة الموقع فقط: اضغط «نسيت كلمة المرور؟» في شاشة الدخول وأرسل طلبك، فترسل لك الإدارة رابطاً على بريدك لتعيين كلمة مرور جديدة.</p>
       </div>
 
       <div class="card">
@@ -612,9 +616,9 @@
         case 'auth/invalid-credential':
         case 'auth/wrong-password':
         case 'auth/user-not-found':
-          if (ctx === 'login') return 'البريد الإلكتروني أو كلمة المرور غير صحيحة. إن لم يكن لديك حساب <button type="button" class="inline-to-register font-bold underline">أنشئ حساباً جديداً</button>، وإن نسيت كلمة المرور <button type="button" class="inline-to-forgot font-bold underline">استعِدها من هنا</button>.';
+          if (ctx === 'login') return 'البريد الإلكتروني أو كلمة المرور غير صحيحة. إن لم يكن لديك حساب <button type="button" class="inline-to-register font-bold underline">أنشئ حساباً جديداً</button>، وإن نسيت كلمة المرور <button type="button" class="inline-to-forgot font-bold underline">اطلب إعادة تعيينها من الإدارة</button>.';
           return 'كلمة المرور الحالية غير صحيحة.';
-        case 'auth/email-already-in-use': return 'هذا البريد مسجّل مسبقاً. <button type="button" class="inline-to-login font-bold underline">سجّل الدخول</button> أو <button type="button" class="inline-to-forgot font-bold underline">استعِد كلمة المرور</button>.';
+        case 'auth/email-already-in-use': return 'هذا البريد مسجّل مسبقاً. <button type="button" class="inline-to-login font-bold underline">سجّل الدخول</button> أو <button type="button" class="inline-to-forgot font-bold underline">اطلب إعادة تعيين كلمة المرور</button>.';
         case 'auth/invalid-email': return 'صيغة البريد الإلكتروني غير صحيحة.';
         case 'auth/weak-password': return 'كلمة المرور ضعيفة، اجعلها 6 أحرف على الأقل.';
         case 'auth/missing-password': return 'اكتب كلمة المرور.';
@@ -698,19 +702,27 @@
     });
 
     // استعادة كلمة المرور
-    $('forgotForm').addEventListener('submit', async (e) => {
+    // نسيت كلمة المرور: لا استعادة ذاتية — يُجهَّز طلب إلى إدارة الموقع
+    $('forgotForm').addEventListener('submit', (e) => {
       e.preventDefault();
-      const form = e.currentTarget;
       const email = $('forgotEmail').value.trim().toLowerCase();
+      const name = $('forgotName').value.trim();
       setMsg($('forgotSuccess'), '');
-      if (!isValidEmail(email)) return setMsg($('forgotError'), 'اكتب بريداً إلكترونياً صحيحاً.');
-      setMsg($('forgotError'), ''); setBusy(form, true, 'جاري الإرسال...');
-      try {
-        await sendPasswordResetEmail(auth, email);
-        setMsg($('forgotSuccess'), `إذا كان البريد <b dir="ltr">${escapeHtml(email)}</b> مسجّلاً لدينا، فستصلك خلال دقائق رسالة فيها رابط لتعيين كلمة مرور جديدة. تحقق أيضاً من مجلد الرسائل غير المرغوبة (Spam).`, 'ok');
-      } catch (ex) {
-        setMsg($('forgotError'), authErrorMessage(ex.code));
-      } finally { setBusy(form, false); }
+      if (!isValidEmail(email)) return setMsg($('forgotError'), 'اكتب بريدك المسجّل بشكل صحيح.');
+      if (!name) return setMsg($('forgotError'), 'اكتب اسمك المسجّل في الحساب، ليتحقق المشرف من هويتك.');
+      setMsg($('forgotError'), '');
+      const to = ADMIN_EMAILS[0];
+      const subject = 'MySnapLinks - طلب إعادة تعيين كلمة المرور';
+      const body = [
+        'مرحباً إدارة MySnapLinks،', '',
+        'نسيت كلمة المرور الخاصة بحسابي ولا أعرفها، وأطلب إعادة تعيينها.', '',
+        'البريد المسجّل: ' + email,
+        'الاسم المسجّل: ' + name, '',
+        'ملاحظة: يجب أن تُرسَل هذه الرسالة من البريد المسجّل نفسه.'
+      ].join('\n');
+      const gmail = 'https://mail.google.com/mail/?view=cm&fs=1&to=' + encodeURIComponent(to) + '&su=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      const mailto = 'mailto:' + to + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+      setMsg($('forgotSuccess'), `جهّزنا لك رسالة الطلب. أرسلها <b>من بريدك المسجّل نفسه</b> عبر:<div class="flex gap-2 mt-2"><a href="${escapeHtml(gmail)}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-green-600 text-white font-bold">Gmail</a><a href="${escapeHtml(mailto)}" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-700 border border-green-300 font-bold">تطبيق البريد</a></div><div class="mt-2">بعد التحقق من طلبك ترسل لك الإدارة رابطاً على بريدك لتعيين كلمة مرور جديدة. تحقق أيضاً من مجلد Spam.</div>`, 'ok');
     });
 
     // ===== حالة الدخول (يُستدعى تلقائياً عند الدخول/الخروج/فتح الصفحة) =====
@@ -1446,7 +1458,7 @@
       $('adminTableBody').querySelectorAll('.admin-reset-btn').forEach(b => b.addEventListener('click', () => adminSendReset(b)));
     }
 
-    // المشرف يرسل رابط استعادة كلمة المرور لأي مستخدم (ضغطتان للتأكيد)
+    // المشرف وحده يرسل رابط استعادة كلمة المرور (ضغطتان للتأكيد) — المستخدم لا يستطيع طلبه بنفسه
     async function adminSendReset(btn) {
       const email = btn.dataset.email;
       if (!email) return;
