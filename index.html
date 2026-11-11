@@ -423,7 +423,19 @@
           <h2 class="text-lg font-extrabold">📢 المساحة الإعلانية <span class="text-xs font-medium text-gray-400">(حتى 4 إعلانات تتناوب)</span></h2>
           <label class="flex items-center gap-2 text-sm font-bold cursor-pointer"><input type="checkbox" id="adEnabled" class="w-4 h-4 accent-green-600"> تشغيل المساحة الإعلانية</label>
         </div>
-        <div id="adTabs" class="flex flex-wrap items-center gap-2 mb-4"></div>
+        <!-- قائمة الإعلانات المحفوظة مع أزرار التعديل -->
+        <div class="mb-5">
+          <div class="flex items-center justify-between mb-2">
+            <div class="lbl !mb-0">📋 الإعلانات المحفوظة:</div>
+            <button type="button" id="adNewBtn" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 hover:bg-green-700 text-white transition">➕ إعلان جديد</button>
+          </div>
+          <div id="adSavedList" class="space-y-2"></div>
+        </div>
+        <div class="border-t border-gray-100 dark:border-slate-700 pt-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div id="adEditTitle" class="text-sm font-extrabold"></div>
+            <div id="adTabs" class="flex flex-wrap items-center gap-1.5"></div>
+          </div>
         <form id="adForm" class="grid md:grid-cols-2 gap-4" novalidate>
           <div class="space-y-3">
             <div class="flex items-center justify-between">
@@ -453,7 +465,7 @@
               </div>
             </div>
             <div id="adMsg" class="hidden"></div>
-            <button type="submit" class="btn-primary">حفظ ونشر كل الإعلانات</button>
+            <button type="submit" class="btn-primary">💾 حفظ التعديلات ونشرها</button>
           </div>
           <div>
             <div class="lbl">معاينة الإعلان المحدد:</div>
@@ -461,6 +473,7 @@
             <p class="text-[11px] text-gray-400 mt-3 leading-relaxed">يظهر للمستخدم إعلان عشوائي عند فتح التطبيق، ثم تتناوب الإعلانات المفعّلة تلقائياً كل 7 ثوانٍ (ويتوقف التناوب عند مرور الفأرة). الضغط على أي جزء من الإعلان يفتح رابطه في تبويب جديد. يصل التعديل إلى المستخدمين خلال 6 ساعات كحد أقصى، حفاظاً على الحصة.</p>
           </div>
         </form>
+        </div>
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -1280,6 +1293,7 @@
 
     // ----- محرر المشرف -----
     let adminAds = [], adSel = 0;
+    let adSaved = { enabled: true, ads: [] };   // آخر نسخة محفوظة على الخادم
     const AD_FIELDS = ['adTitle', 'adText', 'adUrl', 'adImage', 'adButton'];
 
     function readAdFields() {
@@ -1299,13 +1313,60 @@
       $('adImage').value = a.image; $('adButton').value = a.button;
       setMsg($('adMsg'), '');
       updateAdPreview();
+      renderAdEditTitle();
     }
+    function renderAdEditTitle() {
+      const saved = adSaved.ads[adSel];
+      $('adEditTitle').innerHTML = saved
+        ? `✏️ تعديل الإعلان ${adSel + 1}: <span class="text-green-700 dark:text-green-400">${escapeHtml(saved.title)}</span>`
+        : `➕ إعلان جديد <span class="text-gray-400 font-medium">(الخانة ${adSel + 1})</span>`;
+    }
+    function selectAdSlot(i, scroll = true) {
+      readAdFields(); adSel = i; renderAdTabs(); fillAdFields();
+      if (scroll) { $('adForm').scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => $('adTitle').focus(), 300); }
+    }
+    function renderAdSavedList() {
+      const list = adSaved.ads;
+      if (!list.length) { $('adSavedList').innerHTML = '<div class="text-xs text-gray-400 border border-dashed border-gray-300 dark:border-slate-600 rounded-xl p-4 text-center">لا توجد إعلانات محفوظة بعد. اضغط «➕ إعلان جديد».</div>'; return; }
+      $('adSavedList').innerHTML = list.map((a, i) => {
+        let host = ''; try { host = new URL(a.url).hostname.replace(/^www\./, ''); } catch (e) {}
+        return `<div class="flex flex-wrap items-center justify-between gap-2 rounded-xl px-3 py-2.5 border ${a.on ? 'border-green-200 dark:border-green-900 bg-green-50/60 dark:bg-green-950/20' : 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800/60 opacity-80'}">
+          <div class="min-w-0 flex-1">
+            <div class="text-xs font-bold truncate">${i + 1}. ${escapeHtml(a.title)} <span class="font-medium ${a.on ? 'text-green-700 dark:text-green-400' : 'text-gray-400'}">${a.on ? '🟢 يظهر' : '⏸️ موقوف'}</span></div>
+            <div class="text-[11px] text-gray-500 truncate" dir="ltr" style="text-align:right">${escapeHtml(host)}</div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button type="button" class="ad-edit-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 hover:border-green-500" data-i="${i}">✏️ تعديل</button>
+            <button type="button" class="ad-toggle-btn px-2.5 py-1 rounded-lg text-[11px] font-bold bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 hover:border-amber-500" data-i="${i}">${a.on ? '⏸️ إيقاف' : '▶️ تفعيل'}</button>
+            <button type="button" class="ad-del-btn px-2.5 py-1 rounded-lg text-[11px] font-bold text-rose-600 dark:text-rose-400 bg-white dark:bg-slate-700 border border-rose-200 dark:border-rose-900 hover:bg-rose-50" data-i="${i}">🗑️ حذف</button>
+          </div></div>`;
+      }).join('');
+      $('adSavedList').querySelectorAll('.ad-edit-btn').forEach(b => b.addEventListener('click', () => selectAdSlot(Number(b.dataset.i))));
+      $('adSavedList').querySelectorAll('.ad-toggle-btn').forEach(b => b.addEventListener('click', async () => {
+        const i = Number(b.dataset.i); readAdFields();
+        adminAds[i] = { ...adminAds[i], ...adSaved.ads[i], on: !adSaved.ads[i].on };
+        b.disabled = true; await saveAllAds();
+      }));
+      $('adSavedList').querySelectorAll('.ad-del-btn').forEach(b => b.addEventListener('click', () => armThen(b, async () => {
+        const i = Number(b.dataset.i); readAdFields();
+        adminAds.splice(i, 1); adminAds.push(emptyAd());
+        if (adSel >= i && adSel > 0) adSel--;
+        await saveAllAds();
+      })));
+    }
+    $('adNewBtn').addEventListener('click', () => {
+      readAdFields();
+      const i = adminAds.findIndex(a => !a.title && !a.url && !a.text && !a.image);
+      if (i === -1) return showToast('وصلت إلى الحد الأقصى (4 إعلانات). احذف أو عدّل أحدها.', 'ℹ️');
+      selectAdSlot(i);
+    });
     function renderAdTabs() {
       $('adTabs').innerHTML = adminAds.map((a, i) => {
         const state = !a.title ? '＋' : (a.on ? '🟢' : '⚪');
         const cls = i === adSel ? 'bg-green-600 text-white shadow-sm' : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600';
-        return `<button type="button" data-i="${i}" class="ad-tab px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${cls}">إعلان ${i + 1} <span class="mr-1">${state}</span></button>`;
+        return `<button type="button" data-i="${i}" title="الخانة ${i + 1}" class="ad-tab px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${cls}">${i + 1} ${state}</button>`;
       }).join('');
+      renderAdEditTitle();
       $('adTabs').querySelectorAll('.ad-tab').forEach(b => b.addEventListener('click', () => {
         readAdFields(); adSel = Number(b.dataset.i); renderAdTabs(); fillAdFields();
       }));
@@ -1327,19 +1388,18 @@
       const data = normalizeAdDoc(await loadAd(true));
       adminAds = Array.from({ length: AD_MAX }, (_, i) => data.ads[i] ? { ...emptyAd(), ...data.ads[i] } : emptyAd());
       $('adEnabled').checked = data.ads.length ? data.enabled : true;
+      adSaved = { enabled: data.enabled, ads: data.ads.map(a => ({ ...a })) };
       adSel = 0;
-      renderAdTabs(); fillAdFields();
+      renderAdTabs(); fillAdFields(); renderAdSavedList();
     }
 
-    $('adForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.currentTarget, msg = $('adMsg');
-      readAdFields();
+    async function saveAllAds() {
+      const form = $('adForm'), msg = $('adMsg');
       const out = [];
       for (let i = 0; i < adminAds.length; i++) {
         const a = { ...adminAds[i] };
         if (!a.title && !a.url && !a.text && !a.image) continue; // خانة فارغة
-        const fail = (m) => { adSel = i; renderAdTabs(); fillAdFields(); setMsg(msg, `إعلان ${i + 1}: ${m}`); return true; };
+        const fail = (m) => { adSel = i; renderAdTabs(); fillAdFields(); setMsg(msg, `إعلان ${i + 1}: ${m}`); return false; };
         if (!a.title) return fail('اكتب عنوان الإعلان.');
         if (a.url && !/^https?:\/\//i.test(a.url)) a.url = 'https://' + a.url;
         if (!safeHttpUrl(a.url) || a.url === 'https://') return fail('رابط الإعلان غير صالح.');
@@ -1354,14 +1414,22 @@
         await setDoc(doc(db, 'public', 'ad'), { ...payload, updatedAt: serverTimestamp() });
         try { localStorage.setItem(AD_CACHE_KEY, JSON.stringify({ t: Date.now(), ad: payload })); } catch (x) {}
         renderAdSlot(payload);
+        adSaved = { enabled: payload.enabled, ads: out.map(a => ({ ...a })) };
         adminAds = Array.from({ length: AD_MAX }, (_, i) => out[i] ? { ...out[i] } : emptyAd());
-        adSel = Math.min(adSel, AD_MAX - 1); renderAdTabs(); fillAdFields();
+        adSel = Math.min(adSel, AD_MAX - 1); renderAdTabs(); fillAdFields(); renderAdSavedList();
         const active = out.filter(a => a.on).length;
         setMsg(msg, !payload.enabled
           ? 'تم الحفظ ✅ المساحة الإعلانية متوقفة حالياً عن المستخدمين.'
           : active ? `تم النشر ✅ ${active === 1 ? 'إعلان واحد مفعّل' : active + ' إعلانات مفعّلة تتناوب'} أعلى صفحة الروابط.` : 'تم الحفظ ✅ لا يوجد إعلان مفعّل حالياً.', 'ok');
-      } catch (ex) { setMsg(msg, authErrorMessage(ex.code)); }
+        return true;
+      } catch (ex) { setMsg(msg, authErrorMessage(ex.code)); renderAdSavedList(); return false; }
       finally { setBusy(form, false); }
+    }
+
+    $('adForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      readAdFields();
+      await saveAllAds();
     });
 
     // ===== صفحة حسابي =====
