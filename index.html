@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MySnapLinks | ماي سناب لينكس</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <!-- مكتبة تسجيل الدخول الرسمية من Google -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
@@ -28,21 +30,65 @@
 </head>
 <body class="bg-gray-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col transition-colors duration-200">
 
-  <!-- شريط التنقل العلوي -->
+  <!-- ============================================== -->
+  <!-- 1. شاشة تسجيل الدخول الرسمية بجوجل (GOOGLE AUTH) -->
+  <!-- ============================================== -->
+  <div id="authModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-8 shadow-2xl border border-gray-200 dark:border-slate-700 text-center">
+      
+      <!-- شعار التطبيق -->
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center font-bold text-3xl shadow-inner mb-4">
+        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+        </svg>
+      </div>
+
+      <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center justify-center gap-1.5">
+        <span class="text-green-600 dark:text-green-400">MySnap</span><span>Links</span>
+      </h2>
+      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1.5 mb-7 leading-relaxed">
+        منصتك الذكية لحفظ وتنظيم روابط وأدوات العمل اليومية، متصلة ومحمية بالكامل بحساب Google الخاص بك.
+      </p>
+
+      <!-- حاوية زر جوجل الرسمي -->
+      <div class="flex justify-center mb-4">
+        <div id="googleBtnContainer" class="w-full flex justify-center"></div>
+      </div>
+
+      <div class="text-[11px] text-gray-400 mt-6 border-t border-gray-100 dark:border-slate-700/60 pt-4 flex items-center justify-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd"></path>
+        </svg>
+        <span>تسجيل دخول آمن ومباشر عبر خوادم Google الرسمية</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- 2. واجهة التطبيق الرئيسية (بعد تسجيل الدخول) -->
+  <!-- ============================================== -->
   <header class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-40 shadow-sm">
     <div class="max-w-6xl mx-auto px-4 sm:px-6">
       <div class="flex items-center justify-between h-16 gap-3">
         
-        <!-- عنوان التطبيق MySnapLinks -->
+        <!-- شعار MySnapLinks ومعلومات المستخدم -->
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 rounded-xl bg-green-500/10 text-green-600 dark:text-green-400 flex items-center justify-center font-bold text-lg shadow-inner">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
             </svg>
           </div>
-          <h1 class="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
-            <span class="text-green-600 dark:text-green-400">MySnap</span><span>Links</span>
-          </h1>
+          <div>
+            <h1 class="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-1.5">
+              <span class="text-green-600 dark:text-green-400">MySnap</span><span>Links</span>
+            </h1>
+            <!-- بيانات المستخدم بعد الدخول -->
+            <div id="userProfileBadge" class="text-[11px] text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+              <img id="userAvatarImg" src="https://www.gstatic.com/images/branding/product/1x/avatar_square_grey_32dp.png" alt="" class="w-3.5 h-3.5 rounded-full object-cover">
+              <span id="userEmailSpan" class="font-medium truncate max-w-[140px] sm:max-w-[200px]">mysnaplinks@gmail.com</span>
+            </div>
+          </div>
         </div>
 
         <!-- شريط البحث السريع -->
@@ -55,23 +101,22 @@
               class="w-full bg-gray-50 dark:bg-slate-700/70 border border-gray-200 dark:border-slate-600 rounded-xl pr-9 pl-14 py-2 text-xs sm:text-sm text-slate-800 dark:text-slate-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition"
             >
             <div class="absolute right-3 text-gray-400 pointer-events-none">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
             </div>
             <kbd class="absolute left-2.5 hidden sm:inline-block bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded px-1.5 py-0.5 text-[10px] text-gray-400 font-mono shadow-xs">Ctrl K</kbd>
           </div>
         </div>
 
-        <!-- أزرار الواجهة والوضع الليلي -->
+        <!-- أزرار الواجهة والوضع الليلي والخروج -->
         <div class="flex items-center gap-2">
-          <button id="viewLinksTabBtn" class="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-bold rounded-xl transition bg-green-600 text-white shadow-sm shadow-green-600/20">
+          
+          <button id="viewLinksTabBtn" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-bold rounded-xl transition bg-green-600 text-white shadow-sm shadow-green-600/20">
             <svg class="w-4 h-4 fill-current text-amber-300" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/></svg>
             <span>الروابط</span>
           </button>
 
-          <button id="viewSettingsTabBtn" class="flex items-center gap-1.5 px-3.5 py-2 text-xs sm:text-sm font-medium rounded-xl transition bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600">
-            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <button id="viewSettingsTabBtn" class="flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-medium rounded-xl transition bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600">
+            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
             <span>الإعدادات</span>
           </button>
 
@@ -79,13 +124,19 @@
             <svg id="moonIcon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
             <svg id="sunIcon" class="w-4 h-4 hidden dark:block text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
           </button>
+
+          <!-- زر تسجيل الخروج -->
+          <button id="logoutBtn" title="تسجيل الخروج من الحساب" class="p-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+          </button>
+
         </div>
 
       </div>
     </div>
   </header>
 
-  <!-- إشعار الإجراءات -->
+  <!-- إشعار Toast -->
   <div id="toast" class="fixed bottom-5 left-5 bg-slate-900 text-white px-4 py-2.5 rounded-xl text-xs shadow-xl transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
     <span id="toastIcon">✓</span>
     <span id="toastMessage">تم الإجراء بنجاح</span>
@@ -103,11 +154,11 @@
     </div>
   </div>
 
-  <!-- المحتوى الرئيسي -->
   <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 flex-1 w-full">
 
-    <!-- الواجهة 1: عرض الروابط -->
+    <!-- الواجهة 1: عرض الروابط المباشرة -->
     <section id="linksDashboardView" class="space-y-6">
+      
       <div class="flex items-center justify-between gap-3 pb-3 border-b border-gray-200 dark:border-slate-700">
         <div id="dashboardCategoryBadges" class="flex items-center gap-2 overflow-x-auto pb-1 flex-1"></div>
         <div class="flex items-center gap-2 flex-shrink-0">
@@ -121,12 +172,15 @@
       <div id="groupedRowsContainer" class="space-y-4"></div>
 
       <div id="dashboardEmptyState" class="hidden text-center py-16 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700 p-6">
-        <div class="text-5xl mb-3">🔍</div>
-        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">لم يتم العثور على روابط مطابقة</h3>
+        <div class="text-5xl mb-3">🔗</div>
+        <h3 class="text-base font-bold text-slate-800 dark:text-slate-100">لا توجد روابط مسجلة بعد</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 max-w-md mx-auto">
+          اضغط على زر «+ إضافة رابط جديد» بالأعلى لبدء بناء مجموعات أدواتك وروابطك اليومية.
+        </p>
       </div>
     </section>
 
-    <!-- الواجهة 2: صفحة الإعدادات -->
+    <!-- الواجهة 2: صفحة الإعدادات وإدارة الروابط -->
     <section id="settingsManageView" class="hidden space-y-6">
       
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -155,7 +209,7 @@
       <div id="linkFormCard" class="bg-white dark:bg-slate-800 rounded-2xl p-5 sm:p-6 border border-gray-200 dark:border-slate-700 shadow-sm transition-all">
         <div class="flex items-center justify-between mb-4 pb-2 border-b border-gray-100 dark:border-slate-700">
           <h3 id="formTitle" class="text-base font-bold text-slate-900 dark:text-white">رابط جديد</h3>
-          <span class="text-xs text-gray-400">تُحفظ البيانات في متصفحك مباشرة</span>
+          <span class="text-xs text-gray-400">تُحفظ البيانات تلقائياً وتتزامن بحسابك</span>
         </div>
 
         <form id="linkForm" class="space-y-4">
@@ -194,7 +248,7 @@
 
           <div class="flex justify-end gap-2 pt-2">
             <button type="button" id="cancelFormBtn" class="px-5 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-600 transition">إلغاء</button>
-            <button type="submit" class="px-6 py-2 text-xs font-bold text-white bg-brand-green hover:bg-brand-greenDark rounded-xl shadow-sm transition">حفظ</button>
+            <button type="submit" class="px-6 py-2 text-xs font-bold text-white bg-brand-green hover:bg-brand-greenDark rounded-xl shadow-sm transition">حفظ الرابط</button>
           </div>
         </form>
       </div>
@@ -209,6 +263,8 @@
   </main>
 
   <script>
+    const GOOGLE_CLIENT_ID = "907151890334-j8m0cq0ettidfe7pm1f8k97p3r799amh.apps.googleusercontent.com";
+
     const INITIAL_LINKS = [
       { id: '1', name: 'Claude', url: 'https://claude.ai/new', group: 'الذكاء الاصطناعي', icon: 'https://claude.ai/favicon.ico' },
       { id: '2', name: 'Gemini', url: 'https://gemini.google.com/app', group: 'الذكاء الاصطناعي', icon: 'https://www.gstatic.com/lamda/images/favicon_v1_150160cddff7f294ce30.svg' },
@@ -218,6 +274,7 @@
       { id: '6', name: 'Google Drive', url: 'https://drive.google.com', group: 'أدوات العمل', icon: 'https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_32dp.png' }
     ];
 
+    let currentUser = null;
     let links = [];
     let currentView = 'dashboard';
     let currentCategory = 'all';
@@ -225,16 +282,25 @@
     let sortAscending = true;
     let pendingDeleteId = null;
 
+    const authModal = document.getElementById('authModal');
+    const userProfileBadge = document.getElementById('userProfileBadge');
+    const userEmailSpan = document.getElementById('userEmailSpan');
+    const userAvatarImg = document.getElementById('userAvatarImg');
+    const logoutBtn = document.getElementById('logoutBtn');
+
     const viewLinksTabBtn = document.getElementById('viewLinksTabBtn');
     const viewSettingsTabBtn = document.getElementById('viewSettingsTabBtn');
     const linksDashboardView = document.getElementById('linksDashboardView');
     const settingsManageView = document.getElementById('settingsManageView');
     const goToSettingsBtn = document.getElementById('goToSettingsBtn');
+
     const globalSearchInput = document.getElementById('globalSearchInput');
     const darkModeToggle = document.getElementById('darkModeToggle');
+
     const dashboardCategoryBadges = document.getElementById('dashboardCategoryBadges');
     const groupedRowsContainer = document.getElementById('groupedRowsContainer');
     const dashboardEmptyState = document.getElementById('dashboardEmptyState');
+
     const linkFormCard = document.getElementById('linkFormCard');
     const linkForm = document.getElementById('linkForm');
     const formTitle = document.getElementById('formTitle');
@@ -253,6 +319,7 @@
     const settingsCategoryTabs = document.getElementById('settingsCategoryTabs');
     const settingsCardsContainer = document.getElementById('settingsCardsContainer');
     const settingsEmptyState = document.getElementById('settingsEmptyState');
+
     const deleteModal = document.getElementById('deleteModal');
     const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
@@ -260,24 +327,117 @@
     const toastMessage = document.getElementById('toastMessage');
     const toastIcon = document.getElementById('toastIcon');
 
-    function loadState() {
+    function parseJwt(token) {
       try {
-        const saved = localStorage.getItem('mysnaplinks_data');
-        links = saved ? JSON.parse(saved) : [...INITIAL_LINKS];
-        if (!saved) saveLinks();
-        const savedTheme = localStorage.getItem('mysnaplinks_theme');
-        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-          document.documentElement.classList.add('dark');
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+        return JSON.parse(jsonPayload);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function initGoogleAuth() {
+      try {
+        const savedUser = localStorage.getItem('mysnaplinks_user');
+        if (savedUser) {
+          currentUser = JSON.parse(savedUser);
+          onUserAuthenticated(currentUser);
+          return;
+        }
+      } catch (e) {}
+
+      const checkGsi = setInterval(() => {
+        if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+          clearInterval(checkGsi);
+          google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleGoogleCredentialResponse,
+            auto_select: false
+          });
+
+          google.accounts.id.renderButton(
+            document.getElementById("googleBtnContainer"),
+            {
+              theme: "outline",
+              size: "large",
+              text: "signin_with",
+              shape: "pill",
+              locale: "ar",
+              width: 280
+            }
+          );
+        }
+      }, 100);
+    }
+
+    function handleGoogleCredentialResponse(response) {
+      const payload = parseJwt(response.credential);
+      if (payload && payload.email) {
+        currentUser = {
+          email: payload.email,
+          name: payload.name || payload.email.split('@')[0],
+          picture: payload.picture || 'https://www.gstatic.com/images/branding/product/1x/avatar_square_grey_32dp.png'
+        };
+        try {
+          localStorage.setItem('mysnaplinks_user', JSON.stringify(currentUser));
+        } catch (e) {}
+        onUserAuthenticated(currentUser);
+        showToast(`أهلاً بك يا ${currentUser.name}`);
+      } else {
+        showToast('تعذر التحقق من حساب جوجل', '⚠️');
+      }
+    }
+
+    function onUserAuthenticated(user) {
+      authModal.classList.add('hidden');
+      userEmailSpan.textContent = user.email;
+      userAvatarImg.src = user.picture;
+      userProfileBadge.title = `مسجل كـ: ${user.name} (${user.email})`;
+      loadUserLinks();
+      switchView('dashboard');
+    }
+
+    logoutBtn.addEventListener('click', () => {
+      try {
+        localStorage.removeItem('mysnaplinks_user');
+      } catch (e) {}
+      currentUser = null;
+      authModal.classList.remove('hidden');
+      if (typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+        google.accounts.id.disableAutoSelect();
+      }
+      showToast('تم تسجيل الخروج بنجاح');
+    });
+
+    function getUserStorageKey() {
+      return currentUser ? `mysnaplinks_data_${currentUser.email}` : 'mysnaplinks_data_guest';
+    }
+
+    function loadUserLinks() {
+      try {
+        const key = getUserStorageKey();
+        const saved = localStorage.getItem(key);
+        if (saved) {
+          links = JSON.parse(saved);
         } else {
-          document.documentElement.classList.remove('dark');
+          links = [...INITIAL_LINKS];
+          saveUserLinks();
         }
       } catch (e) {
         links = [...INITIAL_LINKS];
       }
+      renderDashboard();
     }
 
-    function saveLinks() {
-      try { localStorage.setItem('mysnaplinks_data', JSON.stringify(links)); } catch (e) {}
+    function saveUserLinks() {
+      try {
+        const key = getUserStorageKey();
+        localStorage.setItem(key, JSON.stringify(links));
+      } catch (e) {}
     }
 
     function showToast(message, icon = '✓') {
@@ -323,8 +483,7 @@
     goToSettingsBtn.addEventListener('click', () => { switchView('settings'); openNewForm(); });
 
     darkModeToggle.addEventListener('click', () => {
-      const isDark = document.documentElement.classList.toggle('dark');
-      try { localStorage.setItem('mysnaplinks_theme', isDark ? 'dark' : 'light'); } catch (e) {}
+      document.documentElement.classList.toggle('dark');
     });
 
     function updateGroupsDatalist() {
@@ -518,7 +677,7 @@
         links.unshift({ id: Date.now().toString(), name, url, group, icon });
         showToast(`تمت إضافة رابط «${name}»`);
       }
-      saveLinks();
+      saveUserLinks();
       closeForm();
       if (currentView === 'dashboard') renderDashboard(); else renderSettings();
     });
@@ -536,7 +695,7 @@
       if (pendingDeleteId) {
         const item = links.find(l => l.id === pendingDeleteId);
         links = links.filter(l => l.id !== pendingDeleteId);
-        saveLinks();
+        saveUserLinks();
         renderSettings();
         renderDashboard();
         showToast(`تم حذف «${item ? item.name : 'الرابط'}»`, '🗑️');
@@ -585,7 +744,7 @@
           const imported = JSON.parse(event.target.result);
           if (Array.isArray(imported)) {
             links = imported;
-            saveLinks();
+            saveUserLinks();
             renderSettings();
             renderDashboard();
             showToast(`تم استيراد ${imported.length} رابط بنجاح!`);
@@ -600,8 +759,7 @@
       return String(str).replace(/&/g, '&').replace(/</g, '<').replace(/>/g, '>').replace(/"/g, '"').replace(/'/g, ''');
     }
 
-    loadState();
-    switchView('dashboard');
+    initGoogleAuth();
   </script>
 </body>
 </html>
