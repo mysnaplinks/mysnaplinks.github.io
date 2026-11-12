@@ -272,6 +272,18 @@
     </div>
   </div>
 
+  <!-- نافذة تأكيد الخروج -->
+  <div id="logoutModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-gray-200 dark:border-slate-700">
+      <h3 class="font-bold text-slate-900 dark:text-slate-100 text-base mb-2">تسجيل الخروج</h3>
+      <p class="text-xs text-gray-600 dark:text-gray-300 mb-5 leading-relaxed">هل تريد بالتأكيد تسجيل الخروج؟</p>
+      <div class="flex justify-end gap-2 text-xs">
+        <button id="cancelLogoutBtn" class="px-4 py-2 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition">إلغاء</button>
+        <button id="confirmLogoutBtn" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold transition">تسجيل الخروج</button>
+      </div>
+    </div>
+  </div>
+
   <!-- نافذة عرض الملاحظة -->
   <div id="noteModal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-200 dark:border-slate-700">
@@ -970,11 +982,18 @@
       closeForm();
     }
 
-    $('logoutBtn').addEventListener('click', async () => {
-      if (!auth) return;
-      clearRoleCache();
-      await signOut(auth);
-      showToast('تم تسجيل الخروج بنجاح');
+    $('logoutBtn').addEventListener('click', () => { if (auth) $('logoutModal').classList.remove('hidden'); });
+    $('cancelLogoutBtn').addEventListener('click', () => $('logoutModal').classList.add('hidden'));
+    $('confirmLogoutBtn').addEventListener('click', async () => {
+      $('logoutModal').classList.add('hidden');
+      try {
+        clearRoleCache();
+        await signOut(auth);
+        showToast('تم تسجيل الخروج بنجاح');
+      } catch (ex) {
+        console.error(ex);
+        showToast('تعذر تسجيل الخروج، تحقق من اتصالك وأعد المحاولة', '⚠️');
+      }
     });
 
     // تأكيد البريد
@@ -1424,7 +1443,7 @@
         const inp = window.innerWidth >= 768 ? searchInputs[0] : searchInputs[1];
         inp.focus(); inp.select();
       }
-      if (e.key === 'Escape') { pendingDeleteId = null; deleteModal.classList.add('hidden'); closeNoteModal(); closeQrModal(); }
+      if (e.key === 'Escape') { pendingDeleteId = null; deleteModal.classList.add('hidden'); $('logoutModal').classList.add('hidden'); closeNoteModal(); closeQrModal(); }
     });
 
     $('sortLinksBtn').addEventListener('click', () => {
