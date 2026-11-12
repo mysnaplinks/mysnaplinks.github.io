@@ -365,6 +365,7 @@
           <span class="text-green-500 font-bold text-sm">+</span><span>إضافة رابط جديد</span>
         </button>
       </div>
+      <div id="dashboardTagBar" class="hidden flex items-center gap-1.5 flex-wrap text-xs"></div>
       <div id="groupedRowsContainer" class="space-y-4"></div>
       <div id="dashboardEmptyState" class="hidden text-center py-16 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700 p-6">
         <div class="text-5xl mb-3">🔗</div>
@@ -419,6 +420,11 @@
             <textarea id="noteInput" rows="2" maxlength="300" class="inp" placeholder="مثال: حساب العمل، كلمة البحث المفضلة، موعد التجديد..."></textarea>
             <div class="text-[10px] text-gray-400 mt-1 text-left" dir="ltr"><span id="noteCount">0</span>/300</div>
           </div>
+          <div>
+            <label for="tagsInput" class="lbl">🏷️ الوسوم <span class="text-[11px] text-gray-400 font-normal">(اختياري — افصل بينها بفاصلة، حتى 10 وسوم)</span></label>
+            <input type="text" id="tagsInput" maxlength="400" class="inp" placeholder="مثال: طبي، عمل، مهم">
+            <div id="tagSuggest" class="flex flex-wrap gap-1.5 mt-1.5 text-[11px]"></div>
+          </div>
           <div class="flex justify-end gap-2 pt-2">
             <button type="button" id="cancelFormBtn" class="px-5 py-2 text-xs font-semibold text-gray-700 dark:text-gray-300 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-600 transition">إلغاء</button>
             <button type="submit" class="px-6 py-2 text-xs font-bold text-white bg-brand-green hover:bg-brand-greenDark rounded-xl shadow-sm transition">حفظ الرابط</button>
@@ -427,6 +433,7 @@
       </div>
 
       <div id="settingsCategoryTabs" class="flex items-center gap-1.5 overflow-x-auto pb-2 text-xs"></div>
+      <div id="settingsTagBar" class="hidden flex items-center gap-1.5 flex-wrap text-xs"></div>
       <p class="text-[11px] text-gray-400 -mt-3">↕️ استخدم الأسهم ▲▼ بجانب كل رابط لتغيير ترتيبه داخل مجموعته (في وضع «الترتيب: يدوي» ودون بحث). ولترتيب المجموعات نفسها، اضغط «↕️ ترتيب» في الصفحة الرئيسية.</p>
       <div id="settingsCardsContainer" class="space-y-3"></div>
       <div id="settingsEmptyState" class="hidden text-center py-12 bg-white dark:bg-slate-800 rounded-2xl border border-dashed border-gray-300 dark:border-slate-700">
@@ -660,8 +667,46 @@
     const dashboardCategoryBadges = $('dashboardCategoryBadges');
     const settingsCategoryTabs = $('settingsCategoryTabs'), settingsCardsContainer = $('settingsCardsContainer'), settingsEmptyState = $('settingsEmptyState');
     const linkFormCard = $('linkFormCard'), linkForm = $('linkForm'), formTitle = $('formTitle'), editLinkId = $('editLinkId');
-    const groupInput = $('groupInput'), iconInput = $('iconInput'), nameInput = $('nameInput'), urlInput = $('urlInput'), noteInput = $('noteInput');
+    const groupInput = $('groupInput'), iconInput = $('iconInput'), nameInput = $('nameInput'), urlInput = $('urlInput'), noteInput = $('noteInput'), tagsInput = $('tagsInput');
     const NOTE_MAX = 300;
+    // ===== الوسوم =====
+    const TAGS_MAX = 10, TAG_LEN = 30;
+    let activeTag = '';
+    const tagsOf = (l) => Array.isArray(l.tags) ? l.tags : [];
+    const sameTag = (a, b) => String(a).toLowerCase() === String(b).toLowerCase();
+    const hasTag = (l, t) => tagsOf(l).some(x => sameTag(x, t));
+    function parseTags(v) {
+      const out = [];
+      (Array.isArray(v) ? v : String(v || '').split(/[,،؛;]+/)).forEach(t => {
+        t = String(t || '').replace(/^#+/, '').replace(/\s+/g, ' ').trim().slice(0, TAG_LEN);
+        if (t && !out.some(x => sameTag(x, t))) out.push(t);
+      });
+      return out.slice(0, TAGS_MAX);
+    }
+    function getAllTags() {
+      const m = new Map();
+      links.forEach(l => tagsOf(l).forEach(t => { const k = t.toLowerCase(); const o = m.get(k); if (o) o.count++; else m.set(k, { tag: t, count: 1 }); }));
+      return [...m.values()].sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag, 'ar'));
+    }
+    const tagChip = (t, on) => `<button type="button" class="tag-filter px-2 py-0.5 rounded-full transition ${on ? 'bg-sky-600 text-white font-bold' : 'bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-900 hover:bg-sky-100 dark:hover:bg-sky-900/50'}" data-tag="${escapeHtml(t)}">#${escapeHtml(t)}</button>`;
+    function renderTagBar(el) {
+      const all = getAllTags();
+      if (activeTag && !all.some(t => sameTag(t.tag, activeTag))) activeTag = '';
+      el.classList.toggle('hidden', !all.length);
+      el.innerHTML = !all.length ? '' : '<span class="text-gray-400 font-bold">🏷️ فرز بالوسم:</span>'
+        + all.map(t => tagChip(t.tag, sameTag(t.tag, activeTag)).replace('</button>', ` <span class="opacity-60">${t.count}</span></button>`)).join('')
+        + (activeTag ? '<button type="button" class="tag-filter px-2 text-rose-500 font-bold" data-tag="">✕ إلغاء الفرز</button>' : '');
+    }
+    document.addEventListener('click', (e) => {
+      const f = e.target.closest('.tag-filter');
+      if (f) { const t = f.dataset.tag; activeTag = (t && !sameTag(t, activeTag)) ? t : ''; renderCurrent(); return; }
+      const s = e.target.closest('.tag-suggest');
+      if (s) {
+        const cur = parseTags(tagsInput.value);
+        if (!cur.some(x => sameTag(x, s.dataset.tag))) cur.push(s.dataset.tag);
+        tagsInput.value = parseTags(cur).join('، '); tagsInput.focus();
+      }
+    });
     const LINKS_DOC_LIMIT = 900 * 1024; // حد أمان تحت حد Firestore (1 ميغابايت للمستند)
     const deleteModal = $('deleteModal');
     const searchInputs = [$('globalSearchInput'), $('mobileSearchInput')];
@@ -723,7 +768,8 @@
           url: l.url.trim(),
           group: (String(l.group || '').trim() || 'عام').slice(0, 60),
           icon: (typeof l.icon === 'string' && /^https?:\/\//i.test(l.icon.trim())) ? l.icon.trim() : '',
-          note: typeof l.note === 'string' ? l.note.trim().slice(0, NOTE_MAX) : ''
+          note: typeof l.note === 'string' ? l.note.trim().slice(0, NOTE_MAX) : '',
+          tags: parseTags(l.tags)
         }));
     }
 
@@ -1067,7 +1113,7 @@
 
     function resetState() {
       currentUser = null; profile = null; links = []; adminUsers = []; userRole = 'user'; staffMap = {};
-      currentCategory = 'all'; searchQuery = ''; pendingDeleteId = null; reorderGroup = null;
+      currentCategory = 'all'; searchQuery = ''; pendingDeleteId = null; reorderGroup = null; activeTag = '';
       searchInputs.forEach(i => i.value = '');
       [groupedRowsContainer, settingsCardsContainer, dashboardCategoryBadges, settingsCategoryTabs, $('adminTableBody'), $('adminStats'), $('adminChart')].forEach(el => el.innerHTML = '');
       activeEmailLabel.textContent = '';
@@ -1152,10 +1198,12 @@
 
     // ===== عرض الروابط =====
     const getGroups = () => Array.from(new Set(links.map(l => (l.group || '').trim()).filter(Boolean)));
-    const matchesSearch = (l, q) => l.name.toLowerCase().includes(q) || l.url.toLowerCase().includes(q) || l.group.toLowerCase().includes(q) || String(l.note || '').toLowerCase().includes(q);
+    const matchesSearch = (l, q) => l.name.toLowerCase().includes(q) || l.url.toLowerCase().includes(q) || l.group.toLowerCase().includes(q) || String(l.note || '').toLowerCase().includes(q) || tagsOf(l).some(t => t.toLowerCase().includes(q.replace(/^#/, '')));
 
     function updateGroupsDatalist() {
       $('existingGroupsList').innerHTML = getGroups().map(g => `<option value="${escapeHtml(g)}">`).join('');
+      const all = getAllTags();
+      $('tagSuggest').innerHTML = all.length ? '<span class="text-gray-400">وسومك:</span>' + all.map(t => `<button type="button" class="tag-suggest px-2 py-0.5 rounded-full bg-gray-100 dark:bg-slate-700 hover:bg-sky-100 dark:hover:bg-sky-900/50 text-gray-600 dark:text-gray-300" data-tag="${escapeHtml(t.tag)}">+ ${escapeHtml(t.tag)}</button>`).join('') : '';
     }
 
     function categoryButtons(groups, cls, onClass, offClass) {
@@ -1175,6 +1223,7 @@
 
       dashboardCategoryBadges.innerHTML = categoryButtons(groups, 'dash-cat-btn', 'bg-green-600 text-white shadow-sm', OFF_CAT);
       dashboardCategoryBadges.querySelectorAll('.dash-cat-btn').forEach(btn => btn.addEventListener('click', () => { currentCategory = btn.getAttribute('data-cat'); renderDashboard(); }));
+      renderTagBar($('dashboardTagBar'));
 
       const activeGroups = currentCategory !== 'all' ? [currentCategory] : groups;
       const q = searchQuery.toLowerCase().trim();
@@ -1183,6 +1232,7 @@
       activeGroups.forEach(group => {
         let gl = links.filter(l => l.group.trim() === group);
         if (q) gl = gl.filter(l => matchesSearch(l, q));
+        if (activeTag) gl = gl.filter(l => hasTag(l, activeTag));
         if (!gl.length) return;
         total += gl.length;
         html += `
@@ -1220,7 +1270,7 @@
 
       if (!total) {
         groupedRowsContainer.innerHTML = '';
-        dashboardEmptyState.querySelector('h3').textContent = q ? 'لا توجد نتائج مطابقة لبحثك' : 'لا توجد روابط مسجلة بعد';
+        dashboardEmptyState.querySelector('h3').textContent = (q || activeTag) ? 'لا توجد نتائج مطابقة لبحثك' : 'لا توجد روابط مسجلة بعد';
         dashboardEmptyState.classList.remove('hidden');
       } else {
         dashboardEmptyState.classList.add('hidden');
@@ -1235,13 +1285,15 @@
 
       settingsCategoryTabs.innerHTML = categoryButtons(groups, 'set-cat-btn', 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border border-green-300 dark:border-green-800', OFF_CAT);
       settingsCategoryTabs.querySelectorAll('.set-cat-btn').forEach(btn => btn.addEventListener('click', () => { currentCategory = btn.getAttribute('data-cat'); renderSettings(); }));
+      renderTagBar($('settingsTagBar'));
 
       let filtered = [...links];
       if (currentCategory !== 'all') filtered = filtered.filter(l => l.group.trim() === currentCategory);
       const q = searchQuery.toLowerCase().trim();
       if (q) filtered = filtered.filter(l => matchesSearch(l, q));
+      if (activeTag) filtered = filtered.filter(l => hasTag(l, activeTag));
       if (sortMode !== 'custom') filtered.sort((a, b) => sortMode === 'az' ? a.name.localeCompare(b.name, 'ar') : b.name.localeCompare(a.name, 'ar'));
-      const canMove = sortMode === 'custom' && !q;
+      const canMove = sortMode === 'custom' && !q && !activeTag;
 
       if (!filtered.length) { settingsCardsContainer.innerHTML = ''; settingsEmptyState.classList.remove('hidden'); return; }
       settingsEmptyState.classList.add('hidden');
@@ -1259,6 +1311,7 @@
                 <span>المجموعة:</span>
                 <span class="text-slate-700 dark:text-slate-300 font-medium bg-gray-100 dark:bg-slate-700 px-2 py-0.5 rounded-md">${escapeHtml(link.group)}</span>
               </div>
+              ${tagsOf(link).length ? `<div class="flex flex-wrap gap-1 mt-1.5 text-[11px]">${tagsOf(link).map(t => tagChip(t, sameTag(t, activeTag))).join('')}</div>` : ''}
               ${link.note ? `<div class="text-xs text-gray-700 dark:text-gray-200 mt-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg px-2.5 py-1.5 whitespace-pre-wrap break-words">📝 ${escapeHtml(link.note)}</div>` : ''}
             </div>
           </div>
@@ -1478,6 +1531,7 @@
       editLinkId.value = link.id;
       groupInput.value = link.group; iconInput.value = link.icon || ''; nameInput.value = link.name; urlInput.value = link.url;
       noteInput.value = link.note || ''; updateNoteCount();
+      tagsInput.value = tagsOf(link).join('، ');
       linkFormCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       nameInput.focus();
     }
@@ -1494,6 +1548,7 @@
       const icon = iconInput.value.trim();
       const name = nameInput.value.trim();
       const note = noteInput.value.trim().slice(0, NOTE_MAX);
+      const tags = parseTags(tagsInput.value);
       let url = urlInput.value.trim();
       if (!name || !url) return showToast('اكتب الاسم والرابط', '⚠️');
       if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
@@ -1502,10 +1557,10 @@
 
       let next;
       if (id) {
-        next = links.map(l => l.id === id ? { ...l, name, url, group, icon, note } : l);
+        next = links.map(l => l.id === id ? { ...l, name, url, group, icon, note, tags } : l);
       } else {
         if (links.length >= MAX_LINKS) return showToast('وصلت إلى الحد الأقصى لعدد الروابط', '⚠️');
-        next = [{ id: Date.now().toString(), name, url, group, icon, note }, ...links];
+        next = [{ id: Date.now().toString(), name, url, group, icon, note, tags }, ...links];
       }
       if (linksTooBig(next)) return showToast('امتلأت مساحة حسابك. اختصر بعض الملاحظات أو احذف روابط غير مستخدمة.', '⚠️');
       links = next;
