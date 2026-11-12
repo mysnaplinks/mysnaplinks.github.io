@@ -198,6 +198,31 @@
         </form>
       </div>
 
+      <!-- روابط البريد: تعيين كلمة مرور جديدة / تأكيد البريد -->
+      <div id="actionScreen" class="hidden">
+        <div class="w-12 h-12 mx-auto rounded-2xl bg-green-500/10 flex items-center justify-center text-xl mb-3 mt-4">🔐</div>
+        <h2 id="actionTitle" class="text-xl font-extrabold text-slate-900 dark:text-white mb-5">جاري التحقق من الرابط...</h2>
+        <form id="resetForm" class="hidden space-y-3.5 text-right" novalidate>
+          <div>
+            <label class="lbl" for="resetEmail">الحساب:</label>
+            <input type="email" id="resetEmail" autocomplete="username" class="inp opacity-70" dir="ltr" readonly>
+          </div>
+          <div>
+            <label class="lbl" for="resetPass">كلمة المرور الجديدة: <span class="text-[11px] text-gray-400 font-normal">(6 أحرف على الأقل)</span></label>
+            <input type="password" id="resetPass" placeholder="••••••" autocomplete="new-password" class="inp" dir="ltr">
+          </div>
+          <div>
+            <label class="lbl" for="resetPass2">أعد كتابة كلمة المرور الجديدة:</label>
+            <input type="password" id="resetPass2" placeholder="••••••" autocomplete="new-password" class="inp" dir="ltr">
+          </div>
+          <label class="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300 cursor-pointer"><input type="checkbox" id="resetShow" class="w-4 h-4 accent-green-600"> إظهار كلمة المرور</label>
+          <div id="resetError" class="hidden err"></div>
+          <button type="submit" class="btn-primary">حفظ كلمة المرور</button>
+        </form>
+        <div id="actionResult" class="hidden ok leading-relaxed"></div>
+        <button type="button" id="actionContinueBtn" class="hidden btn-primary mt-4">متابعة إلى MySnapLinks</button>
+      </div>
+
     </div>
   </div>
 
@@ -565,7 +590,8 @@
     import {
       getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword,
       sendPasswordResetEmail, sendEmailVerification, updateProfile, updatePassword,
-      reauthenticateWithCredential, EmailAuthProvider, deleteUser, signOut
+            reauthenticateWithCredential, EmailAuthProvider, deleteUser, signOut,
+      verifyPasswordResetCode, confirmPasswordReset, applyActionCode
     } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import {
       initializeFirestore, getFirestore, persistentLocalCache, doc, getDoc, setDoc, deleteDoc,
@@ -727,7 +753,7 @@
     }
 
     // ===== شاشات الدخول =====
-    const AUTH_SCREENS = ['welcome', 'login', 'register', 'forgot'];
+    const AUTH_SCREENS = ['welcome', 'login', 'register', 'forgot', 'action'];
     function showAuthScreen(name) {
       AUTH_SCREENS.forEach(s => $(s + 'Screen').classList.toggle('hidden', s !== name));
       ['loginError', 'registerError', 'forgotError', 'forgotSuccess'].forEach(id => setMsg($(id), ''));
@@ -817,8 +843,73 @@
       setMsg($('forgotSuccess'), `جهّزنا لك رسالة الطلب. أرسلها <b>من بريدك المسجّل نفسه</b> عبر:<div class="flex gap-2 mt-2"><a href="${escapeHtml(gmail)}" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-lg bg-green-600 text-white font-bold">Gmail</a><a href="${escapeHtml(mailto)}" class="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-700 border border-green-300 font-bold">تطبيق البريد</a></div><div class="mt-2">بعد التحقق من طلبك ترسل لك الإدارة رابطاً على بريدك لتعيين كلمة مرور جديدة. تحقق أيضاً من مجلد Spam.</div>`, 'ok');
     });
 
+    // ===== روابط البريد (بدل صفحة Firebase الافتراضية) =====
+    // تعمل بعد ضبط Action URL في Firebase على عنوان الموقع
+    function actionErrorMessage(code) {
+      if (code === 'auth/expired-action-code') return 'انتهت صلاحية هذا الرابط. اطلب رابطاً جديداً.';
+      if (code === 'auth/invalid-action-code') return 'هذا الرابط غير صالح أو استُخدم من قبل. اطلب رابطاً جديداً.';
+      return authErrorMessage(code);
+    }
+    function handleEmailAction() {
+      const p = new URLSearchParams(location.search);
+      const mode = p.get('mode'), code = p.get('oobCode');
+      if (!code || !['resetPassword', 'verifyEmail'].includes(mode)) return false;
+      history.replaceState(null, '', location.pathname);
+      loadingScreen.classList.add('hidden');
+      authModal.classList.remove('hidden');
+      showAuthScreen('action');
+      const done = (html, type = 'ok') => {
+        $('resetForm').classList.add('hidden');
+        setMsg($('actionResult'), html, type);
+        $('actionContinueBtn').classList.remove('hidden');
+      };
+      $('actionContinueBtn').addEventListener('click', () => {
+        $('actionContinueBtn').classList.add('hidden');
+        loadingScreen.classList.remove('hidden');
+        startAuthListener();
+      }, { once: true });
+
+      if (mode === 'resetPassword') {
+        $('actionTitle').textContent = 'تعيين كلمة مرور جديدة';
+        verifyPasswordResetCode(auth, code).then(email => {
+          $('resetEmail').value = email;
+          $('resetForm').classList.remove('hidden');
+          setTimeout(() => $('resetPass').focus(), 50);
+        }).catch(ex => done(actionErrorMessage(ex.code), 'err'));
+        $('resetShow').addEventListener('change', (e) => {
+          ['resetPass', 'resetPass2'].forEach(id => $(id).type = e.target.checked ? 'text' : 'password');
+        });
+        $('resetForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const form = e.currentTarget, err = $('resetError');
+          const email = $('resetEmail').value, pass = $('resetPass').value, pass2 = $('resetPass2').value;
+          if (pass.length < 6) return setMsg(err, 'كلمة المرور يجب أن تكون 6 أحرف على الأقل.');
+          if (pass !== pass2) return setMsg(err, 'كلمتا المرور غير متطابقتين.');
+          setMsg(err, ''); setBusy(form, true, 'جاري الحفظ...');
+          try { await confirmPasswordReset(auth, code, pass); }
+          catch (ex) { setBusy(form, false); return setMsg(err, actionErrorMessage(ex.code)); }
+          // دخول مباشر بالكلمة الجديدة: يثبت أنها تعمل، ويحفظها المتصفح لهذا الموقع
+          try {
+            await signInWithEmailAndPassword(auth, email, pass);
+            welcomeMode = 'login';
+            done('✅ تم تغيير كلمة المرور، وسُجّل دخولك بها بنجاح.');
+          } catch (ex) {
+            $('loginEmail').value = email; justLoggedOut = true;
+            done('✅ تم تغيير كلمة المرور. سجّل الدخول الآن بكلمتك الجديدة.');
+          } finally { setBusy(form, false); }
+        });
+      } else {
+        $('actionTitle').textContent = 'تأكيد البريد الإلكتروني';
+        applyActionCode(auth, code).then(async () => {
+          try { await auth.authStateReady(); if (auth.currentUser) { await auth.currentUser.reload(); await auth.currentUser.getIdToken(true); } } catch (x) {}
+          done('✅ تم تأكيد بريدك الإلكتروني بنجاح.');
+        }).catch(ex => done(actionErrorMessage(ex.code), 'err'));
+      }
+      return true;
+    }
+
     // ===== حالة الدخول (يُستدعى تلقائياً عند الدخول/الخروج/فتح الصفحة) =====
-    if (configReady) {
+    function startAuthListener() {
       onAuthStateChanged(auth, async (user) => {
         if (user) {
           currentUser = user;
@@ -847,6 +938,9 @@
           authModal.classList.remove('hidden');
         }
       });
+    }
+    if (configReady) {
+      if (!handleEmailAction()) startAuthListener();
     } else {
       loadingScreen.classList.add('hidden');
       authModal.classList.remove('hidden');
