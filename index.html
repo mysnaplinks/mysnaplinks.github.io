@@ -628,6 +628,8 @@
     // ===== تهيئة Firebase =====
     const configReady = !String(FIREBASE_CONFIG.apiKey).startsWith('YOUR');
     let auth = null, db = null;
+    // روابط البريد تعود إلى موقعنا (صفحة التعيين/التأكيد الخاصة) بدل صفحة Firebase
+    const EMAIL_ACTION = { url: location.origin + '/', handleCodeInApp: true };
     if (configReady) {
       const app = initializeApp(FIREBASE_CONFIG);
       auth = getAuth(app);
@@ -812,7 +814,7 @@
         pendingRegisterName = name; welcomeMode = 'new';
         const cred = await createUserWithEmailAndPassword(auth, email, pass);
         try { await updateProfile(cred.user, { displayName: name }); } catch (x) {}
-        try { await sendEmailVerification(cred.user); } catch (x) {}
+        try { await sendEmailVerification(cred.user, EMAIL_ACTION); } catch (x) {}
       } catch (ex) {
         pendingRegisterName = null; welcomeMode = null;
         setMsg(err, authErrorMessage(ex.code, 'register'));
@@ -1096,7 +1098,7 @@
     
     // تأكيد البريد
     $('resendVerifyBtn').addEventListener('click', async () => {
-      try { await sendEmailVerification(currentUser); showToast('أُرسلت رسالة التأكيد إلى بريدك 📧'); }
+      try { await sendEmailVerification(currentUser, EMAIL_ACTION); showToast('أُرسلت رسالة التأكيد إلى بريدك 📧'); }
       catch (ex) { showToast(isQuotaError(ex.code) ? QUOTA_MSG : ex.code === 'auth/too-many-requests' ? 'انتظر قليلاً قبل إعادة الإرسال' : 'تعذر الإرسال', '⚠️'); }
     });
     $('checkVerifyBtn').addEventListener('click', async () => {
@@ -1989,7 +1991,7 @@
       }
       btn.dataset.armed = ''; btn.disabled = true; btn.textContent = 'جاري الإرسال...';
       try {
-        await sendPasswordResetEmail(auth, email);
+        await sendPasswordResetEmail(auth, email, EMAIL_ACTION);
         btn.textContent = '✅ أُرسل';
         showToast(`أُرسل رابط استعادة كلمة المرور إلى ${email}`);
       } catch (ex) {
