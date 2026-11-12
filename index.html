@@ -1777,8 +1777,9 @@
     }
 
     function setAdminStatus(html) { const el = $('adminStatus'); el.innerHTML = html; el.classList.remove('hidden'); }
+    $('adminStatus').addEventListener('click', (e) => { if (e.target.closest('#refreshStatsBtn') && isPrimaryOwner()) loadAdmin(true); });
 
-    async function loadAdmin() {
+    async function loadAdmin(force = false) {
       $('adminStats').innerHTML = '<div class="col-span-full text-center text-xs text-gray-400 py-6">جاري تحميل الإحصائيات...</div>';
       $('adminChart').innerHTML = ''; $('adminTableBody').innerHTML = '';
       $('adminStatus').classList.add('hidden');
@@ -1789,12 +1790,12 @@
         const msnap = await getDoc(mref);
         const cached = msnap.exists() ? msnap.data() : null;
         const { date, hour } = istanbulNow();
-        const canRefresh = hour >= STATS_HOUR && (!cached || cached.date !== date);
+        const canRefresh = force || (hour >= STATS_HOUR && (!cached || cached.date !== date));
 
         if (canRefresh) {
           const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc')));
           const payload = {
-            date, fetchedAt: Date.now(),
+            date: (force && hour < STATS_HOUR) ? (cached ? cached.date : '') : date, fetchedAt: Date.now(),
             users: snap.docs.map(d => {
               const x = d.data(), c = toDate(x.createdAt), l = toDate(x.lastLoginAt);
               return { n: x.name || '', e: x.email || '', v: !!x.emailVerified, c: c ? c.getTime() : null, l: l ? l.getTime() : null, k: Number(x.linksCount) || 0 };
@@ -1811,7 +1812,7 @@
         }
 
         const nextIsToday = hour < STATS_HOUR;
-        setAdminStatus(`🕘 آخر تحديث: <b>${fmtDate(new Date(adminFetchedAt), true)}</b> — التحديث القادم: <b>${nextIsToday ? 'اليوم' : 'غداً'} الساعة 9:00 مساءً</b> (توقيت إسطنبول). تُحدَّث الإحصائيات مرة واحدة يومياً.`);
+        setAdminStatus(`🕘 آخر تحديث: <b>${fmtDate(new Date(adminFetchedAt), true)}</b> — التحديث القادم: <b>${nextIsToday ? 'اليوم' : 'غداً'} الساعة 9:00 مساءً</b> (توقيت إسطنبول). تُحدَّث الإحصائيات مرة واحدة يومياً.${isPrimaryOwner() ? ' <button id="refreshStatsBtn" class="mr-2 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition">🔄 تحديث الآن</button>' : ''}`);
         renderAdmin();
       } catch (ex) {
         console.error(ex);
