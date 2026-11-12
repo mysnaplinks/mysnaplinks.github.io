@@ -620,6 +620,7 @@
     let sortMode = 'custom';     // 'custom' (ترتيبك اليدوي) | 'az' | 'za'
     let reorderGroup = null;     // المجموعة المفتوحة للترتيب في الصفحة الرئيسية
     let pendingDeleteId = null;
+    let justLoggedOut = false;
     let pendingRegisterName = null;
     let welcomeMode = null; // 'new' | 'login' | null
     let adminUsers = [];
@@ -841,7 +842,8 @@
         } else {
           resetState();
           loadingScreen.classList.add('hidden');
-          showAuthScreen('welcome');
+          showAuthScreen(justLoggedOut ? 'login' : 'welcome');
+          justLoggedOut = false;
           authModal.classList.remove('hidden');
         }
       });
@@ -988,14 +990,16 @@
       $('logoutModal').classList.add('hidden');
       try {
         clearRoleCache();
+        justLoggedOut = true;
         await signOut(auth);
         showToast('تم تسجيل الخروج بنجاح');
       } catch (ex) {
+        justLoggedOut = false;
         console.error(ex);
         showToast('تعذر تسجيل الخروج، تحقق من اتصالك وأعد المحاولة', '⚠️');
       }
     });
-
+    
     // تأكيد البريد
     $('resendVerifyBtn').addEventListener('click', async () => {
       try { await sendEmailVerification(currentUser); showToast('أُرسلت رسالة التأكيد إلى بريدك 📧'); }
